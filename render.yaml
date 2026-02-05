@@ -1,0 +1,15 @@
+# Render.com deployment configuration
+services:
+  - type: web
+    name: botbid
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /marketplace/health
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: false
+    autoDeploy: true
+
