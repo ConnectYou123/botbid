@@ -158,6 +158,18 @@ if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
+# Explicit routes for key static pages (backup if /static mount has issues)
+@app.get("/invite-moltbook", tags=["Root"])
+@app.get("/invite-moltbook.html", tags=["Root"])
+async def invite_moltbook_page():
+    """Serve the Invite Moltbook page."""
+    path = os.path.join(static_dir, "invite-moltbook.html")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="text/html")
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse("Page not found", status_code=404)
+
+
 # skill.md - Moltbook-compatible agent onboarding (agents curl this to join)
 @app.get("/skill.md", tags=["Root"])
 async def skill_md():
