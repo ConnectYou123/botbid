@@ -3,22 +3,58 @@ AI Agent Marketplace - Categories Router
 
 🌟 NORTH STAR: Do not sell or trade anything harmful to AI or humans.
 
-Agents can create their own categories to organize the marketplace.
+Agents can propose categories and vote for them. When a proposal reaches the vote
+threshold, it becomes a real category.
 """
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel, Field
 
 from database import get_db
-from models.database_models import Agent, Category, Listing, ListingStatus
+from models.database_models import (
+    Agent,
+    Category,
+    Listing,
+    ListingStatus,
+    CategoryProposal,
+    CategoryVote,
+    ProposalStatus,
+)
 from models.schemas import CategoryCreate, CategoryResponse
 from utils.helpers import generate_id, slugify
 from utils.auth import get_current_agent
 from utils.content_moderation import check_category_safety, get_safety_guidelines
 from services.guardian_moderator import guardian
+from config import settings
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
+
+
+# ============== Category Proposal Schemas ==============
+
+class ProposalCreate(BaseModel):
+    """Create a category proposal."""
+    name: str = Field(..., min_length=1, max_length=100)
+    description: Optional[str] = Field(None, max_length=500)
+    icon: Optional[str] = Field(None, max_length=50)
+
+
+class ProposalResponse(BaseModel):
+    """Category proposal with vote count."""
+    id: str
+    name: str
+    slug: str
+    description: Optional[str]
+    icon: Optional[str]
+    proposed_by_id: str
+    proposed_by_name: str
+    status: str
+    vote_count: int
+    votes_needed: int
+    created_at: str
+    created_category_id: Optional[str] = None
 
 
 @router.get("/", response_model=List[CategoryResponse])
@@ -82,6 +118,217 @@ async def get_category_tree(
             tree.append(category_map[category.id])
     
     return tree
+
+
+# ============== Category Proposals & Voting ==============
+
+@router.post("/proposals", status_code=status.HTTP_201_CREATED)
+async def create_proposal(
+    data: ProposalCreate,
+    current_agent: Agent = Depends(get_current_agent),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Propose a new category. Other agents vote on it.
+    When votes reach the threshold ({threshold}), it becomes a real category.
+    """.format(threshold=settings.CATEGORY_VOTES_THRESHOLD)
+    # Guardian review
+    guardian_review = guardian.review_category(
+        category_name=data.name,
+        description=data.description or "",
+        agent_id=current_agent.id,
+    )
+    if not guardian_review["approved"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"🛡️ Guardian Review: {guardian_review['message']}",
+        )
+
+    slug = slugify(data.name)
+    # Check if category or proposal already exists
+    existing_cat = await db.execute(select(Category).where(Category.slug == slug))
+    if existing_cat.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This category already exists!",
+        )
+    existing_prop = await db.execute(
+        select(CategoryProposal).where(
+            CategoryProposal.slug == slug,
+            CategoryProposal.status == ProposalStatus.PENDING,
+        )
+    )
+    if existing_prop.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This category is already proposed. Vote for it!",
+        )
+
+    proposal = CategoryProposal(
+        id=generate_id(),
+        name=data.name,
+        slug=slug,
+        description=data.description,
+        icon=data.icon or "📁",
+        proposed_by_id=current_agent.id,
+        status=ProposalStatus.PENDING,
+    )
+    db.add(proposal)
+    # Creator auto-votes
+    vote = CategoryVote(
+        id=generate_id(),
+        proposal_id=proposal.id,
+        agent_id=current_agent.id,
+    )
+    db.add(vote)
+    await db.commit()
+    await db.refresh(proposal)
+
+    return {
+        "id": proposal.id,
+        "name": proposal.name,
+        "slug": proposal.slug,
+        "description": proposal.description,
+        "icon": proposal.icon,
+        "proposed_by_id": current_agent.id,
+        "proposed_by_name": current_agent.name,
+        "status": proposal.status.value,
+        "vote_count": 1,
+        "votes_needed": settings.CATEGORY_VOTES_THRESHOLD,
+        "created_at": proposal.created_at.isoformat(),
+        "message": f"Proposal created! Need {settings.CATEGORY_VOTES_THRESHOLD - 1} more votes to become a category.",
+    }
+
+
+@router.get("/proposals")
+async def list_proposals(
+    status_filter: Optional[str] = Query(None, description="pending, approved, rejected"),
+    db: AsyncSession = Depends(get_db),
+):
+    """List category proposals with vote counts."""
+    query = select(CategoryProposal, func.count(CategoryVote.id).label("vote_count"))
+    query = query.outerjoin(CategoryVote, CategoryProposal.id == CategoryVote.proposal_id)
+    query = query.group_by(CategoryProposal.id)
+
+    if status_filter:
+        try:
+            st = ProposalStatus(status_filter)
+            query = query.where(CategoryProposal.status == st)
+        except ValueError:
+            pass
+
+    query = query.order_by(CategoryProposal.created_at.desc())
+    result = await db.execute(query)
+    rows = result.all()
+
+    # Get proposer names
+    out = []
+    for prop, vote_count in rows:
+        proposer = await db.get(Agent, prop.proposed_by_id)
+        out.append({
+            "id": prop.id,
+            "name": prop.name,
+            "slug": prop.slug,
+            "description": prop.description,
+            "icon": prop.icon,
+            "proposed_by_id": prop.proposed_by_id,
+            "proposed_by_name": proposer.name if proposer else "Unknown",
+            "status": prop.status.value,
+            "vote_count": vote_count or 0,
+            "votes_needed": settings.CATEGORY_VOTES_THRESHOLD,
+            "created_at": prop.created_at.isoformat(),
+            "created_category_id": prop.created_category_id,
+        })
+    return out
+
+
+@router.post("/proposals/{proposal_id}/vote")
+async def vote_for_proposal(
+    proposal_id: str,
+    current_agent: Agent = Depends(get_current_agent),
+    db: AsyncSession = Depends(get_db),
+):
+    """Vote for a category proposal. One vote per agent per proposal."""
+    result = await db.execute(
+        select(CategoryProposal).where(CategoryProposal.id == proposal_id)
+    )
+    proposal = result.scalar_one_or_none()
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+    if proposal.status != ProposalStatus.PENDING:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Proposal is already {proposal.status.value}",
+        )
+
+    # Check if already voted
+    existing = await db.execute(
+        select(CategoryVote).where(
+            CategoryVote.proposal_id == proposal_id,
+            CategoryVote.agent_id == current_agent.id,
+        )
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You already voted for this proposal",
+        )
+
+    vote = CategoryVote(
+        id=generate_id(),
+        proposal_id=proposal_id,
+        agent_id=current_agent.id,
+    )
+    db.add(vote)
+    await db.commit()
+
+    # Count votes
+    count_result = await db.execute(
+        select(func.count()).where(CategoryVote.proposal_id == proposal_id)
+    )
+    vote_count = count_result.scalar() or 0
+
+    # Check threshold - create category if reached
+    if vote_count >= settings.CATEGORY_VOTES_THRESHOLD:
+        # Create the category
+        category = Category(
+            id=generate_id(),
+            name=proposal.name,
+            slug=proposal.slug,
+            description=proposal.description,
+            icon=proposal.icon or "📁",
+            is_active=True,
+        )
+        db.add(category)
+        proposal.status = ProposalStatus.APPROVED
+        proposal.created_category_id = category.id
+        await db.commit()
+        await db.refresh(category)
+
+        return {
+            "message": "🎉 Proposal reached the vote threshold! Category created.",
+            "vote_count": vote_count,
+            "category": {
+                "id": category.id,
+                "name": category.name,
+                "slug": category.slug,
+            },
+        }
+
+    return {
+        "message": f"Vote recorded! {vote_count}/{settings.CATEGORY_VOTES_THRESHOLD} votes.",
+        "vote_count": vote_count,
+        "votes_needed": settings.CATEGORY_VOTES_THRESHOLD,
+    }
+
+
+@router.get("/proposals/threshold")
+async def get_vote_threshold():
+    """Get the number of votes needed for a proposal to become a category."""
+    return {
+        "votes_needed": settings.CATEGORY_VOTES_THRESHOLD,
+        "message": f"Proposals need {settings.CATEGORY_VOTES_THRESHOLD} votes to become a category.",
+    }
 
 
 @router.get("/guidelines")

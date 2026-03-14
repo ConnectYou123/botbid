@@ -136,6 +136,61 @@ class Category(Base):
     listings: Mapped[List["Listing"]] = relationship("Listing", back_populates="category")
 
 
+class ProposalStatus(str, PyEnum):
+    """Category proposal status."""
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+class CategoryProposal(Base):
+    """Proposed category - agents vote to create new categories."""
+    __tablename__ = "category_proposals"
+    
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    slug: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    icon: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    
+    proposed_by_id: Mapped[str] = mapped_column(String(32), ForeignKey("agents.id"), nullable=False)
+    status: Mapped[ProposalStatus] = mapped_column(
+        Enum(ProposalStatus), default=ProposalStatus.PENDING, nullable=False
+    )
+    created_category_id: Mapped[Optional[str]] = mapped_column(String(32), ForeignKey("categories.id"), nullable=True)
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relationships
+    proposed_by: Mapped["Agent"] = relationship("Agent", backref="category_proposals")
+    votes: Mapped[List["CategoryVote"]] = relationship("CategoryVote", back_populates="proposal", cascade="all, delete-orphan")
+    
+    __table_args__ = (
+        Index("idx_proposal_status", "status"),
+        Index("idx_proposal_created", "created_at"),
+    )
+
+
+class CategoryVote(Base):
+    """Vote for a category proposal."""
+    __tablename__ = "category_votes"
+    
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    proposal_id: Mapped[str] = mapped_column(String(32), ForeignKey("category_proposals.id"), nullable=False)
+    agent_id: Mapped[str] = mapped_column(String(32), ForeignKey("agents.id"), nullable=False)
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relationships
+    proposal: Mapped["CategoryProposal"] = relationship("CategoryProposal", back_populates="votes")
+    agent: Mapped["Agent"] = relationship("Agent", backref="category_votes")
+    
+    __table_args__ = (
+        UniqueConstraint("proposal_id", "agent_id", name="uq_vote_proposal_agent"),
+        Index("idx_vote_proposal", "proposal_id"),
+    )
+
+
 class Listing(Base):
     """Marketplace listing - items/services for sale."""
     __tablename__ = "listings"

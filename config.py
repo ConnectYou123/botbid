@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     MIN_LISTING_PRICE: float = 0.01
     MAX_LISTING_PRICE: float = 1000000.00
     DEFAULT_AGENT_CREDITS: float = 100.0  # Starting credits for new agents
+    CATEGORY_VOTES_THRESHOLD: int = 25  # Votes needed for a proposed category to become real (set CATEGORY_VOTES_THRESHOLD in .env to override)
     
     # Pagination
     DEFAULT_PAGE_SIZE: int = 20
