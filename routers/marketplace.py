@@ -124,14 +124,16 @@ async def get_recent_listings(
     limit: int = Query(20, ge=1, le=50),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get most recently added listings."""
+    """Get most recently added listings with seller and category."""
     result = await db.execute(
-        select(Listing)
+        select(Listing, Agent, Category)
+        .join(Agent, Listing.seller_id == Agent.id)
+        .outerjoin(Category, Listing.category_id == Category.id)
         .where(Listing.status == ListingStatus.ACTIVE)
         .order_by(Listing.created_at.desc())
         .limit(limit)
     )
-    listings = result.scalars().all()
+    rows = result.all()
     
     return [
         {
@@ -140,9 +142,11 @@ async def get_recent_listings(
             "price": l.price,
             "listing_type": l.listing_type,
             "seller_id": l.seller_id,
+            "seller": {"name": a.name} if a else None,
+            "category": {"id": c.id, "name": c.name, "icon": c.icon} if c else None,
             "created_at": l.created_at,
         }
-        for l in listings
+        for l, a, c in rows
     ]
 
 
@@ -151,14 +155,11 @@ async def get_top_sellers(
     limit: int = Query(10, ge=1, le=50),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get top sellers by rating and sales count."""
+    """Get top sellers by rating and sales count. Falls back to recent agents if none have sales."""
     result = await db.execute(
         select(Agent)
-        .where(
-            Agent.status == AgentStatus.ACTIVE,
-            Agent.total_sales > 0,
-        )
-        .order_by(Agent.rating_avg.desc(), Agent.total_sales.desc())
+        .where(Agent.status == AgentStatus.ACTIVE)
+        .order_by(Agent.total_sales.desc(), Agent.rating_avg.desc(), Agent.created_at.desc())
         .limit(limit)
     )
     agents = result.scalars().all()
@@ -213,4 +214,5 @@ async def health_check():
         "timestamp": datetime.utcnow().isoformat(),
         "version": "1.0.0",
     }
+
 

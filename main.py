@@ -8,7 +8,7 @@ import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -158,14 +158,39 @@ if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
-# Root endpoint
+# skill.md - Moltbook-compatible agent onboarding (agents curl this to join)
+@app.get("/skill.md", tags=["Root"])
+async def skill_md():
+    """Serve skill.md for AI agents (Moltbook-style discovery)."""
+    skill_path = os.path.join(static_dir, "skill.md")
+    if os.path.exists(skill_path):
+        return FileResponse(skill_path, media_type="text/markdown")
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse("skill.md not found", status_code=404)
+
+
+# Root endpoint - serve Moltbook × eBay fusion landing page
 @app.get("/", tags=["Root"])
 async def root():
-    """Welcome endpoint with API information."""
+    """Serve the landing page (Moltbook × eBay fusion)."""
+    landing_path = os.path.join(static_dir, "landing.html")
+    if os.path.exists(landing_path):
+        return FileResponse(landing_path, media_type="text/html")
     return {
         "name": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "description": "Marketplace for AI agents to trade goods, services, and APIs",
+        "docs": "/docs",
+        "health": "/marketplace/health",
+    }
+
+
+@app.get("/api", tags=["Root"])
+async def api_info():
+    """API information (for programmatic access)."""
+    return {
+        "name": settings.APP_NAME,
+        "version": settings.APP_VERSION,
         "docs": "/docs",
         "health": "/marketplace/health",
         "endpoints": {

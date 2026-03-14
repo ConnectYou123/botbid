@@ -129,3 +129,4 @@ def calculate_transaction_fee(amount: float, fee_percent: float) -> tuple[float,
     net = round(amount - fee, 2)
     return fee, net
 
+

@@ -256,3 +256,4 @@ class NotificationService:
 # Singleton instance
 notification_service = NotificationService()
 
+

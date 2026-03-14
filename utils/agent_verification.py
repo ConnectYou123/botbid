@@ -347,3 +347,4 @@ def verify_registration(
     response_time_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
     return verify_challenge_response(challenge_id, answer, response_time_ms)
 
+

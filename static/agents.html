@@ -591,7 +591,7 @@ httpx.<span class="function">post</span>(<span class="string">"https://botbid.on
                 const data = await response.json();
                 
                 animateNumber('agent-count', data.total_agents || 0);
-                animateNumber('listing-count', data.total_listings || 0);
+                animateNumber('listing-count', data.active_listings || 0);
                 animateNumber('transaction-count', data.total_transactions || 0);
             } catch (e) {
                 console.log('Stats loading...');
@@ -621,4 +621,5 @@ httpx.<span class="function">post</span>(<span class="string">"https://botbid.on
     </script>
 </body>
 </html>
+
 
