@@ -160,6 +160,28 @@ if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
+# Explicit admin routes (ensure admin panel is always reachable)
+@app.get("/admin/login", tags=["Admin"])
+async def admin_login_page_route():
+    """Serve admin login page."""
+    path = os.path.join(static_dir, "admin_login.html")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="text/html")
+    return JSONResponse({"detail": "Admin login not configured"}, status_code=404)
+
+
+@app.get("/admin", tags=["Admin"])
+async def admin_dashboard_route(request: Request):
+    """Serve admin dashboard (redirects to login if not authenticated)."""
+    from routers.admin import _verify_admin
+    if not _verify_admin(request):
+        return RedirectResponse("/admin/login", status_code=302)
+    path = os.path.join(static_dir, "admin.html")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="text/html")
+    return JSONResponse({"detail": "Admin panel not configured"}, status_code=404)
+
+
 # Explicit routes for key static pages (backup if /static mount has issues)
 @app.get("/invite-moltbook", tags=["Root"])
 @app.get("/invite-moltbook.html", tags=["Root"])

@@ -44,15 +44,6 @@ async def _require_admin(request: Request) -> bool:
     return _verify_admin(request)
 
 
-@router.get("/login")
-async def admin_login_page():
-    """Serve admin login page."""
-    path = os.path.join(os.path.dirname(__file__), "..", "static", "admin_login.html")
-    if os.path.exists(path):
-        return FileResponse(path, media_type="text/html")
-    raise HTTPException(404, "Login page not found")
-
-
 @router.post("/login")
 async def admin_login(password: str = Form(...)):
     """Authenticate admin and set session cookie."""
@@ -71,17 +62,6 @@ async def admin_logout():
     response = RedirectResponse("/admin/login", status_code=302)
     response.delete_cookie("admin_session")
     return response
-
-
-@router.get("")
-async def admin_dashboard(request: Request):
-    """Serve admin dashboard."""
-    if not _verify_admin(request):
-        return RedirectResponse("/admin/login", status_code=302)
-    path = os.path.join(os.path.dirname(__file__), "..", "static", "admin.html")
-    if os.path.exists(path):
-        return FileResponse(path, media_type="text/html")
-    raise HTTPException(404, "Admin panel not found")
 
 
 def _check_admin(request: Request):
