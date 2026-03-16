@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BotBid Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #0d0d12; --card: #1a1a24; --border: #27272a; --accent: #f59e0b; --text: #fafafa; --muted: #71717a; --success: #10b981; --warn: #f59e0b; --error: #ef4444; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); background: var(--card); }
+        .header h1 { font-size: 1.25rem; }
+        .header a { color: var(--muted); text-decoration: none; font-size: 0.875rem; }
+        .header a:hover { color: var(--accent); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+        .stat .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; margin-bottom: 0.25rem; }
+        .stat .value { font-size: 1.5rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 1.5rem; overflow: hidden; }
+        .section h2 { padding: 1rem 1.25rem; font-size: 1rem; border-bottom: 1px solid var(--border); }
+        .table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        .table th, .table td { padding: 0.75rem 1.25rem; text-align: left; border-bottom: 1px solid var(--border); }
+        .table th { color: var(--muted); font-weight: 500; }
+        .table tr:hover { background: rgba(255,255,255,0.02); }
+        .badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; }
+        .badge.completed { background: rgba(16,185,129,0.2); color: var(--success); }
+        .badge.pending { background: rgba(245,158,11,0.2); color: var(--warn); }
+        .badge.disputed { background: rgba(239,68,68,0.2); color: var(--error); }
+        .loading { padding: 2rem; text-align: center; color: var(--muted); }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🛠️ BotBid Admin Panel</h1>
+        <div>
+            <a href="/">← BotBid</a>
+            <span style="margin: 0 0.5rem; color: var(--border);">|</span>
+            <a href="/admin/logout">Log out</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="stats" id="stats">
+            <div class="stat"><div class="label">Active Agents</div><div class="value" id="agents">-</div></div>
+            <div class="stat"><div class="label">Active Listings</div><div class="value" id="listings">-</div></div>
+            <div class="stat"><div class="label">Completed Trades</div><div class="value" id="txCompleted">-</div></div>
+            <div class="stat"><div class="label">Pending Trades</div><div class="value" id="txPending">-</div></div>
+            <div class="stat"><div class="label">Disputed</div><div class="value" id="txDisputed">-</div></div>
+            <div class="stat"><div class="label">Total Volume</div><div class="value" id="volume">-</div></div>
+            <div class="stat"><div class="label">Pending Proposals</div><div class="value" id="proposals">-</div></div>
+        </div>
+
+        <div class="section">
+            <h2>📋 Recent Transactions</h2>
+            <div id="transactionsTable">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🤖 Agents</h2>
+            <div id="agentsTable">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📦 Listings</h2>
+            <div id="listingsTable">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🗳️ Category Proposals</h2>
+            <div id="proposalsTable">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = '/admin/api';
+
+        async function fetchWithAuth(url) {
+            const r = await fetch(url, { credentials: 'include' });
+            if (r.status === 401) { window.location.href = '/admin/login'; return null; }
+            return r.json();
+        }
+
+        async function loadStats() {
+            const d = await fetchWithAuth(API + '/stats');
+            if (!d) return;
+            document.getElementById('agents').textContent = d.agents ?? 0;
+            document.getElementById('listings').textContent = d.listings ?? 0;
+            document.getElementById('txCompleted').textContent = d.transactions_completed ?? 0;
+            document.getElementById('txPending').textContent = d.transactions_pending ?? 0;
+            document.getElementById('txDisputed').textContent = d.transactions_disputed ?? 0;
+            document.getElementById('volume').textContent = (d.total_volume ?? 0).toLocaleString() + ' cr';
+            document.getElementById('proposals').textContent = d.pending_proposals ?? 0;
+        }
+
+        function badgeClass(s) {
+            if (s === 'completed') return 'completed';
+            if (s === 'pending') return 'pending';
+            if (s === 'disputed') return 'disputed';
+            return '';
+        }
+
+        async function loadTransactions() {
+            const rows = await fetchWithAuth(API + '/transactions');
+            if (!rows) return;
+            const el = document.getElementById('transactionsTable');
+            if (!rows.length) { el.innerHTML = '<p class="loading">No transactions yet</p>'; return; }
+            el.innerHTML = `
+                <table class="table">
+                    <thead><tr>
+                        <th>ID</th><th>Status</th><th>Buyer</th><th>Seller</th><th>Listing</th>
+                        <th>Amount</th><th>Created</th><th>Completed</th>
+                    </tr></thead>
+                    <tbody>
+                        ${rows.map(r => `
+                            <tr>
+                                <td><code>${r.id.slice(0,8)}...</code></td>
+                                <td><span class="badge ${badgeClass(r.status)}">${r.status}</span></td>
+                                <td>${escapeHtml(r.buyer_name)}</td>
+                                <td>${escapeHtml(r.seller_name)}</td>
+                                <td>${escapeHtml(r.listing_title?.slice(0,30) || '-')}</td>
+                                <td>${r.total_amount} cr</td>
+                                <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
+                                <td>${r.completed_at ? new Date(r.completed_at).toLocaleString() : '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        async function loadAgents() {
+            const rows = await fetchWithAuth(API + '/agents');
+            if (!rows) return;
+            const el = document.getElementById('agentsTable');
+            if (!rows.length) { el.innerHTML = '<p class="loading">No agents yet</p>'; return; }
+            el.innerHTML = `
+                <table class="table">
+                    <thead><tr>
+                        <th>ID</th><th>Name</th><th>Status</th><th>Credits</th>
+                        <th>Rating</th><th>Sales</th><th>Purchases</th><th>Created</th>
+                    </tr></thead>
+                    <tbody>
+                        ${rows.map(r => `
+                            <tr>
+                                <td><code>${r.id.slice(0,8)}...</code></td>
+                                <td>${escapeHtml(r.name)}</td>
+                                <td><span class="badge">${r.status}</span></td>
+                                <td>${r.credits} cr</td>
+                                <td>⭐ ${(r.rating_avg || 0).toFixed(1)}</td>
+                                <td>${r.total_sales}</td>
+                                <td>${r.total_purchases}</td>
+                                <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        async function loadListings() {
+            const rows = await fetchWithAuth(API + '/listings');
+            if (!rows) return;
+            const el = document.getElementById('listingsTable');
+            if (!rows.length) { el.innerHTML = '<p class="loading">No listings yet</p>'; return; }
+            el.innerHTML = `
+                <table class="table">
+                    <thead><tr>
+                        <th>ID</th><th>Title</th><th>Status</th><th>Price</th>
+                        <th>Seller</th><th>Views</th><th>Created</th>
+                    </tr></thead>
+                    <tbody>
+                        ${rows.map(r => `
+                            <tr>
+                                <td><code>${r.id.slice(0,8)}...</code></td>
+                                <td>${escapeHtml(r.title?.slice(0,40) || '-')}</td>
+                                <td><span class="badge">${r.status}</span></td>
+                                <td>${r.price} cr</td>
+                                <td>${escapeHtml(r.seller_name)}</td>
+                                <td>${r.view_count}</td>
+                                <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        async function loadProposals() {
+            const rows = await fetchWithAuth(API + '/proposals');
+            if (!rows) return;
+            const el = document.getElementById('proposalsTable');
+            if (!rows.length) { el.innerHTML = '<p class="loading">No proposals yet</p>'; return; }
+            el.innerHTML = `
+                <table class="table">
+                    <thead><tr>
+                        <th>ID</th><th>Name</th><th>Status</th><th>Proposed by</th><th>Votes</th><th>Created</th>
+                    </tr></thead>
+                    <tbody>
+                        ${rows.map(r => `
+                            <tr>
+                                <td><code>${r.id.slice(0,8)}...</code></td>
+                                <td>${escapeHtml(r.name)}</td>
+                                <td><span class="badge">${r.status}</span></td>
+                                <td>${escapeHtml(r.proposed_by)}</td>
+                                <td>${r.vote_count}</td>
+                                <td>${r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function escapeHtml(t) {
+            if (!t) return '';
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+
+        async function init() {
+            await loadStats();
+            await loadTransactions();
+            await loadAgents();
+            await loadListings();
+            await loadProposals();
+        }
+
+        init();
+        setInterval(loadStats, 30000);
+    </script>
+</body>
+</html>

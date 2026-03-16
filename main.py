@@ -26,6 +26,7 @@ from routers import (
     categories_router,
     marketplace_router,
     guardian_router,
+    admin_router,
 )
 from services.notification_service import notification_service
 
@@ -150,6 +151,7 @@ app.include_router(transactions_router)
 app.include_router(messages_router)
 app.include_router(ratings_router)
 app.include_router(categories_router)
+app.include_router(admin_router)
 
 # Mount static files
 import os

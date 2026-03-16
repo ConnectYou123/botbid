@@ -277,6 +277,11 @@ class Transaction(Base):
     # Delivery (for API/Service type listings)
     delivery_data: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON - API keys, access tokens, etc.
     
+    # Smart contract escrow (future)
+    escrow_tx_hash: Mapped[Optional[str]] = mapped_column(String(66), nullable=True)  # 0x...
+    escrow_contract_address: Mapped[Optional[str]] = mapped_column(String(42), nullable=True)
+    escrow_status: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)  # pending, released, refunded, disputed
+    
     # Notes
     buyer_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     seller_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

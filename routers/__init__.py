@@ -9,6 +9,7 @@ from routers.ratings import router as ratings_router
 from routers.categories import router as categories_router
 from routers.marketplace import router as marketplace_router
 from routers.guardian import router as guardian_router
+from routers.admin import router as admin_router
 
 __all__ = [
     "agents_router",
@@ -19,5 +20,6 @@ __all__ = [
     "categories_router",
     "marketplace_router",
     "guardian_router",
+    "admin_router",
 ]
 

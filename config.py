@@ -37,6 +37,14 @@ class Settings(BaseSettings):
     DEFAULT_AGENT_CREDITS: float = 100.0  # Starting credits for new agents
     CATEGORY_VOTES_THRESHOLD: int = 25  # Votes needed for a proposed category to become real (set CATEGORY_VOTES_THRESHOLD in .env to override)
     
+    # Admin panel — set ADMIN_PASSWORD in .env to override (default for dev only!)
+    ADMIN_PASSWORD: str = "Iloveyou123!"
+    
+    # Smart contract escrow (future - see docs/SMART_CONTRACT_DESIGN.md)
+    ESCROW_ENABLED: bool = False
+    ESCROW_CONTRACT_ADDRESS: Optional[str] = None
+    ESCROW_CHAIN_ID: int = 84532  # Base Sepolia testnet
+    
     # Pagination
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE: int = 100

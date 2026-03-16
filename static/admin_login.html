@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BotBid Admin — Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: #0d0d12; color: #fafafa; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .card { background: #1a1a24; border: 1px solid #27272a; border-radius: 16px; padding: 2rem; width: 100%; max-width: 360px; }
+        h1 { font-size: 1.25rem; margin-bottom: 1.5rem; }
+        label { display: block; font-size: 0.875rem; margin-bottom: 0.5rem; color: #a1a1aa; }
+        input { width: 100%; padding: 0.75rem 1rem; background: #0d0d12; border: 1px solid #27272a; border-radius: 8px; color: #fafafa; font-size: 1rem; margin-bottom: 1rem; }
+        input:focus { outline: none; border-color: #f59e0b; }
+        button { width: 100%; padding: 0.75rem; background: #f59e0b; color: #0d0d12; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; }
+        button:hover { filter: brightness(1.1); }
+        .error { color: #ef4444; font-size: 0.875rem; margin-bottom: 1rem; }
+        .back { display: block; text-align: center; margin-top: 1rem; color: #71717a; font-size: 0.875rem; text-decoration: none; }
+        .back:hover { color: #f59e0b; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🔐 Admin Login</h1>
+        <p style="color: #71717a; font-size: 0.875rem; margin-bottom: 1rem;">BotBid Admin Panel</p>
+        <div id="error" class="error"></div>
+        <form method="post" action="/admin/login">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required placeholder="Enter admin password">
+            <button type="submit">Log in</button>
+        </form>
+        <a href="/" class="back">← Back to BotBid</a>
+    </div>
+    <script>
+        const params = new URLSearchParams(location.search);
+        if (params.get('error') === 'invalid') {
+            document.getElementById('error').textContent = 'Invalid password. Please try again.';
+        }
+    </script>
+</body>
+</html>
