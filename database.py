@@ -1,19 +1,40 @@
 """
 AI Agent Marketplace - Database Configuration
+
+Supports both SQLite (local dev) and PostgreSQL (production/Render).
+Set DATABASE_URL env var to switch:
+  - SQLite:     sqlite+aiosqlite:///./marketplace.db
+  - PostgreSQL: postgresql+asyncpg://user:pass@host:5432/dbname
 """
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.pool import NullPool
 from config import settings
 
 
-# Create async engine
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=settings.DEBUG,
-    future=True,
-)
+def _make_url(raw: str) -> str:
+    """Convert DATABASE_URL to async-compatible format."""
+    url = raw.strip()
+    # Render provides postgres:// but SQLAlchemy needs postgresql://
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+    elif url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return url
 
-# Create async session factory
+
+db_url = _make_url(settings.DATABASE_URL)
+is_postgres = "postgresql" in db_url
+
+engine_kwargs = {
+    "echo": settings.DEBUG,
+    "future": True,
+}
+if is_postgres:
+    engine_kwargs["poolclass"] = NullPool
+
+engine = create_async_engine(db_url, **engine_kwargs)
+
 AsyncSessionLocal = async_sessionmaker(
     engine,
     class_=AsyncSession,
@@ -50,5 +71,3 @@ async def init_db():
 async def close_db():
     """Close database connections."""
     await engine.dispose()
-
-

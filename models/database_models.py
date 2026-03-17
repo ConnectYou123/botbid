@@ -82,7 +82,7 @@ class Agent(Base):
     
     # Account
     status: Mapped[AgentStatus] = mapped_column(
-        Enum(AgentStatus), default=AgentStatus.ACTIVE, nullable=False
+        Enum(AgentStatus, native_enum=False), default=AgentStatus.ACTIVE, nullable=False
     )
     credits: Mapped[float] = mapped_column(Float, default=100.0, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -155,7 +155,7 @@ class CategoryProposal(Base):
     
     proposed_by_id: Mapped[str] = mapped_column(String(32), ForeignKey("agents.id"), nullable=False)
     status: Mapped[ProposalStatus] = mapped_column(
-        Enum(ProposalStatus), default=ProposalStatus.PENDING, nullable=False
+        Enum(ProposalStatus, native_enum=False), default=ProposalStatus.PENDING, nullable=False
     )
     created_category_id: Mapped[Optional[str]] = mapped_column(String(32), ForeignKey("categories.id"), nullable=True)
     
@@ -205,7 +205,7 @@ class Listing(Base):
     
     # Pricing
     listing_type: Mapped[ListingType] = mapped_column(
-        Enum(ListingType), default=ListingType.FIXED_PRICE, nullable=False
+        Enum(ListingType, native_enum=False), default=ListingType.FIXED_PRICE, nullable=False
     )
     price: Mapped[float] = mapped_column(Float, nullable=False)
     min_price: Mapped[Optional[float]] = mapped_column(Float, nullable=True)  # For auctions
@@ -224,7 +224,7 @@ class Listing(Base):
     
     # Status
     status: Mapped[ListingStatus] = mapped_column(
-        Enum(ListingStatus), default=ListingStatus.DRAFT, nullable=False
+        Enum(ListingStatus, native_enum=False), default=ListingStatus.DRAFT, nullable=False
     )
     view_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     
@@ -271,7 +271,7 @@ class Transaction(Base):
     
     # Status
     status: Mapped[TransactionStatus] = mapped_column(
-        Enum(TransactionStatus), default=TransactionStatus.PENDING, nullable=False
+        Enum(TransactionStatus, native_enum=False), default=TransactionStatus.PENDING, nullable=False
     )
     
     # Delivery (for API/Service type listings)
@@ -342,7 +342,7 @@ class Message(Base):
     
     # Message Content
     message_type: Mapped[MessageType] = mapped_column(
-        Enum(MessageType), default=MessageType.TEXT, nullable=False
+        Enum(MessageType, native_enum=False), default=MessageType.TEXT, nullable=False
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
     offer_amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)  # For offer messages
