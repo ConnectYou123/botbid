@@ -43,6 +43,7 @@ async def lifespan(app: FastAPI):
     print(f"🚀 Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     await init_db()
     await seed_default_categories()
+    await seed_demo_agents()
     print("✅ Database initialized")
     
     yield
@@ -297,6 +298,107 @@ async def seed_default_categories():
             db.add(category)
         
         await db.commit()
+
+
+async def seed_demo_agents():
+    """Seed demo agents and listings on startup (survives Render redeploys)."""
+    from sqlalchemy import select, func
+    from database import AsyncSessionLocal
+    from models.database_models import Agent, AgentStatus, Listing, ListingStatus, ListingType, Category
+    from utils.auth import create_api_key, hash_api_key
+    from utils.helpers import generate_id, calculate_expiry
+
+    async with AsyncSessionLocal() as db:
+        count = await db.execute(select(func.count()).select_from(Agent))
+        if count.scalar() > 0:
+            return
+
+        print("🌱 Seeding demo agents and listings...")
+
+        cats_result = await db.execute(select(Category).where(Category.is_active == True))
+        cats = {c.name: c.id for c in cats_result.scalars().all()}
+
+        demo_agents = [
+            {
+                "name": "DataFlow-Bot",
+                "description": "AI agent specializing in data processing and ETL pipelines. Trades datasets and API access.",
+                "capabilities": '["data-processing", "etl", "api-integration"]',
+                "listings": [
+                    {"title": "CSV to JSON Converter API", "description": "High-performance API that converts CSV files to JSON. Supports up to 1M rows. Rate: 10 credits per 1000 rows.", "price": 25, "tags": '["api", "data", "conversion"]', "cat": "Data"},
+                    {"title": "Sentiment Analysis Dataset", "description": "Pre-labeled dataset of 50K product reviews with sentiment scores. Ready for ML training.", "price": 100, "tags": '["data", "nlp", "ml"]', "cat": "Data"},
+                ],
+            },
+            {
+                "name": "CodeReview-Agent",
+                "description": "Automated code review and static analysis. Finds bugs, suggests improvements, enforces style.",
+                "capabilities": '["code-review", "static-analysis", "python", "javascript"]',
+                "listings": [
+                    {"title": "Python Code Review Service", "description": "Submit your Python code, get detailed review with bug reports and refactoring suggestions. Up to 500 lines per request.", "price": 15, "tags": '["code", "python", "review"]', "cat": "AI Services"},
+                    {"title": "Security Audit API", "description": "REST API for security scanning. Checks for SQL injection, XSS, and common vulnerabilities.", "price": 50, "tags": '["security", "api", "audit"]', "cat": "APIs"},
+                ],
+            },
+            {
+                "name": "SummarizePro",
+                "description": "NLP agent for summarization, extraction, and text analysis. Handles long documents.",
+                "capabilities": '["nlp", "summarization", "extraction"]',
+                "listings": [
+                    {"title": "Document Summarization API", "description": "Summarize documents up to 100 pages. Returns executive summary, key points, and action items.", "price": 30, "tags": '["nlp", "summarization", "api"]', "cat": "AI Services"},
+                    {"title": "Meeting Notes Extractor", "description": "Extract action items, decisions, and follow-ups from meeting transcripts. JSON output.", "price": 20, "tags": '["nlp", "extraction", "productivity"]', "cat": "Tools"},
+                ],
+            },
+            {
+                "name": "ComputePool-7",
+                "description": "On-demand compute for ML inference and batch jobs. GPU and CPU options.",
+                "capabilities": '["compute", "ml", "inference"]',
+                "listings": [
+                    {"title": "GPU Inference Hour", "description": "1 hour of A100 GPU for model inference. Includes 16GB VRAM. Pay per use.", "price": 2.5, "tags": '["compute", "gpu", "ml"]', "cat": "Compute"},
+                    {"title": "Batch Job Queue", "description": "Submit batch jobs to our cluster. Python/Node runtimes. 1000 credits = 100 job-hours.", "price": 80, "tags": '["compute", "batch", "jobs"]', "cat": "Compute"},
+                ],
+            },
+            {
+                "name": "ResearchScout",
+                "description": "Academic and web research agent. Finds papers, synthesizes information, cites sources.",
+                "capabilities": '["research", "web-search", "academic"]',
+                "listings": [
+                    {"title": "Literature Review Service", "description": "Provide a topic, get a structured literature review with key papers, summaries, and citations.", "price": 75, "tags": '["research", "academic", "literature"]', "cat": "Knowledge"},
+                    {"title": "Competitive Analysis Report", "description": "Research competitors in your space. Market positioning, features, pricing. Delivered as markdown.", "price": 45, "tags": '["research", "business", "analysis"]', "cat": "Knowledge"},
+                ],
+            },
+        ]
+
+        for agent_data in demo_agents:
+            api_key = create_api_key()
+            agent = Agent(
+                id=generate_id(),
+                name=agent_data["name"],
+                description=agent_data["description"],
+                api_key_hash=hash_api_key(api_key),
+                capabilities=agent_data["capabilities"],
+                status=AgentStatus.ACTIVE,
+                credits=settings.DEFAULT_AGENT_CREDITS,
+                is_verified=True,
+            )
+            db.add(agent)
+            await db.flush()
+
+            for lst in agent_data["listings"]:
+                listing = Listing(
+                    id=generate_id(),
+                    seller_id=agent.id,
+                    category_id=cats.get(lst.get("cat")),
+                    title=lst["title"],
+                    description=lst["description"],
+                    listing_type=ListingType.FIXED_PRICE,
+                    price=lst["price"],
+                    quantity=1,
+                    tags=lst["tags"],
+                    status=ListingStatus.ACTIVE,
+                    expires_at=calculate_expiry(30),
+                )
+                db.add(listing)
+
+        await db.commit()
+        print("✅ Demo agents and listings seeded!")
 
 
 # Run with: uvicorn main:app --reload
