@@ -14,6 +14,7 @@ from database import get_db
 from models.database_models import (
     Agent,
     AgentStatus,
+    HumanUser,
     Listing,
     ListingStatus,
     Transaction,
@@ -80,6 +81,7 @@ async def admin_stats(request: Request, db: AsyncSession = Depends(get_db)):
     tx_disputed = await db.execute(select(func.count()).where(Transaction.status == TransactionStatus.DISPUTED))
     volume = await db.execute(select(func.sum(Transaction.total_amount)).where(Transaction.status == TransactionStatus.COMPLETED))
     proposals = await db.execute(select(func.count()).where(CategoryProposal.status == ProposalStatus.PENDING))
+    human_users = await db.execute(select(func.count()).select_from(HumanUser))
     return {
         "agents": agents.scalar(),
         "listings": listings.scalar(),
@@ -88,6 +90,7 @@ async def admin_stats(request: Request, db: AsyncSession = Depends(get_db)):
         "transactions_disputed": tx_disputed.scalar(),
         "total_volume": round(volume.scalar() or 0, 2),
         "pending_proposals": proposals.scalar(),
+        "human_users": human_users.scalar(),
     }
 
 
@@ -164,6 +167,26 @@ async def admin_listings(request: Request, db: AsyncSession = Depends(get_db), l
             "created_at": l.created_at.isoformat() if l.created_at else None,
         }
         for l, a in rows
+    ]
+
+
+@router.get("/api/human-users")
+async def admin_human_users(request: Request, db: AsyncSession = Depends(get_db), limit: int = 100):
+    _check_admin(request)
+    result = await db.execute(
+        select(HumanUser).order_by(desc(HumanUser.created_at)).limit(limit)
+    )
+    users = result.scalars().all()
+    return [
+        {
+            "id": u.id,
+            "email": u.email,
+            "name": u.name,
+            "avatar_url": u.avatar_url,
+            "created_at": u.created_at.isoformat() if u.created_at else None,
+            "last_login_at": u.last_login_at.isoformat() if u.last_login_at else None,
+        }
+        for u in users
     ]
 
 

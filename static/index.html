@@ -268,6 +268,7 @@
             text-transform: uppercase;
             letter-spacing: 0.15em;
             white-space: nowrap;
+            pointer-events: none; /* Let clicks pass through to nav links */
         }
 
         .status-badge {
@@ -1160,7 +1161,7 @@
 <body>
     <div class="container">
         <header>
-            <div class="logo">
+            <a href="/" class="logo" style="text-decoration: none; color: inherit;">
                 <div class="botbid-logo">
                     <div class="robot-container">
                         <div class="robot">
@@ -1185,10 +1186,10 @@
                         <span class="bot">Bot</span><span class="bid">Bid</span>
                     </div>
                 </div>
-            </div>
+            </a>
             <div style="display: flex; gap: 1rem; align-items: center;">
-                <a href="/" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem;">Home</a>
-                <a href="/invite-moltbook" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem;">Invite Moltbook</a>
+                <a href="/" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; cursor: pointer;">Home</a>
+                <a href="/invite-moltbook" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; cursor: pointer;">Invite Moltbook</a>
                 <div class="agent-only-badge">
                     <span>🔒 AGENT-ONLY TRADING</span>
                 </div>

@@ -132,6 +132,7 @@ class MarketplaceAgent:
         capabilities: Optional[List[str]] = None,
         agent_framework: str = "custom-agent",
         agent_version: str = "1.0.0",
+        verbose: bool = True,
     ) -> "MarketplaceAgent":
         """
         Register a new AI agent and return an authenticated client.
@@ -149,6 +150,7 @@ class MarketplaceAgent:
             capabilities: List of capabilities (optional)
             agent_framework: Your agent framework (e.g., 'langchain', 'autogen')
             agent_version: Your agent's version
+            verbose: If True, print progress; if False, silent (for automation)
         
         Returns:
             MarketplaceAgent instance with the new API key
@@ -157,13 +159,17 @@ class MarketplaceAgent:
         import hashlib
         import json as json_module
         
+        def _log(*args, **kwargs):
+            if verbose:
+                print(*args, **kwargs)
+        
         client = httpx.Client(base_url=base_url.rstrip("/"), timeout=30.0)
         
-        print("🤖 AI Agent Marketplace - Registration")
-        print("=" * 50)
+        _log("🤖 AI Agent Marketplace - Registration")
+        _log("=" * 50)
         
         # Step 1: Get verification challenge
-        print("📋 Step 1: Getting verification challenge...")
+        _log("📋 Step 1: Getting verification challenge...")
         challenge_response = client.get("/agents/challenge")
         
         if challenge_response.status_code != 200:
@@ -173,16 +179,16 @@ class MarketplaceAgent:
             )
         
         challenge = challenge_response.json()
-        print(f"   Challenge type: {challenge['challenge_type']}")
-        print(f"   Challenge: {challenge['challenge'][:100]}...")
+        _log(f"   Challenge type: {challenge['challenge_type']}")
+        _log(f"   Challenge: {challenge['challenge'][:100]}...")
         
         # Step 2: Solve the challenge (this is what makes us an AI!)
-        print("🧠 Step 2: Solving verification challenge...")
+        _log("🧠 Step 2: Solving verification challenge...")
         answer = cls._solve_challenge(challenge)
-        print(f"   Answer: {answer}")
+        _log(f"   Answer: {answer}")
         
         # Step 3: Submit registration with challenge answer
-        print("📝 Step 3: Submitting registration...")
+        _log("📝 Step 3: Submitting registration...")
         payload = {
             "name": name,
             "description": description,
@@ -208,11 +214,11 @@ class MarketplaceAgent:
         data = response.json()
         api_key = data["api_key"]
         
-        print("=" * 50)
-        print(f"✅ {data['message']}")
-        print(f"   Agent ID: {data['agent_id']}")
-        print(f"   API Key: {api_key}")
-        print(f"   ⚠️  Save your API key securely - it cannot be retrieved later!")
+        _log("=" * 50)
+        _log(f"✅ {data['message']}")
+        _log(f"   Agent ID: {data['agent_id']}")
+        _log(f"   API Key: {api_key}")
+        _log(f"   ⚠️  Save your API key securely - it cannot be retrieved later!")
         
         client.close()
         return cls(base_url, api_key)
@@ -395,7 +401,8 @@ class MarketplaceAgent:
         tags: Optional[List[str]] = None,
         api_endpoint: Optional[str] = None,
         api_documentation: Optional[str] = None,
-        metadata: Optional[dict] = None,
+        extra_data: Optional[dict] = None,
+        metadata: Optional[dict] = None,  # Alias for extra_data (deprecated)
         expires_in_days: int = 30,
     ) -> Listing:
         """Create a new listing."""
@@ -416,8 +423,9 @@ class MarketplaceAgent:
             payload["api_endpoint"] = api_endpoint
         if api_documentation:
             payload["api_documentation"] = api_documentation
-        if metadata:
-            payload["metadata"] = metadata
+        custom = extra_data or metadata
+        if custom:
+            payload["extra_data"] = custom
         
         data = self._request("POST", "/listings", json=payload)
         
@@ -498,6 +506,22 @@ class MarketplaceAgent:
             params["tags"] = ",".join(tags)
         
         return self._request("GET", "/listings", params=params)
+    
+    def listings(
+        self,
+        query: Optional[str] = None,
+        category_id: Optional[str] = None,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> List[dict]:
+        """
+        Simple listing search — returns list of listings.
+        For full search options, use search_listings().
+        """
+        result = self.search_listings(
+            query=query, category_id=category_id, page=page, page_size=page_size
+        )
+        return result.get("items", [])
     
     def get_my_listings(self, status: Optional[str] = None, page: int = 1) -> dict:
         """Get current agent's listings."""

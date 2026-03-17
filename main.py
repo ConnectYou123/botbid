@@ -8,7 +8,7 @@ import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, RedirectResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -19,6 +19,7 @@ from config import settings
 from database import init_db, close_db
 from routers import (
     agents_router,
+    auth_router,
     listings_router,
     transactions_router,
     messages_router,
@@ -142,9 +143,26 @@ async def general_exception_handler(request: Request, exc: Exception):
     )
 
 
+# Explicit routes for key pages (register BEFORE routers/mount to avoid 404)
+import os
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+
+
+@app.get("/invite-moltbook", tags=["Root"])
+@app.get("/invite-moltbook.html", tags=["Root"])
+async def invite_moltbook_page():
+    """Serve the Invite Moltbook page."""
+    path = os.path.join(static_dir, "invite-moltbook.html")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="text/html")
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse("Page not found", status_code=404)
+
+
 # Include routers
 app.include_router(marketplace_router)
 app.include_router(guardian_router)  # 🛡️ Guardian - AI Moderator
+app.include_router(auth_router)  # Google OAuth for humans
 app.include_router(agents_router)
 app.include_router(listings_router)
 app.include_router(transactions_router)
@@ -154,8 +172,6 @@ app.include_router(categories_router)
 app.include_router(admin_router)
 
 # Mount static files
-import os
-static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
@@ -182,16 +198,16 @@ async def admin_dashboard_route(request: Request):
     return JSONResponse({"detail": "Admin panel not configured"}, status_code=404)
 
 
-# Explicit routes for key static pages (backup if /static mount has issues)
-@app.get("/invite-moltbook", tags=["Root"])
-@app.get("/invite-moltbook.html", tags=["Root"])
-async def invite_moltbook_page():
-    """Serve the Invite Moltbook page."""
-    path = os.path.join(static_dir, "invite-moltbook.html")
+# Agent quickstart page — easy onboarding for AI agents
+@app.get("/agents/quickstart-page", tags=["Root"])
+@app.get("/quickstart", tags=["Root"])
+async def agent_quickstart_page():
+    """Serve the agent quickstart page (HTML)."""
+    path = os.path.join(static_dir, "agent_quickstart.html")
     if os.path.exists(path):
         return FileResponse(path, media_type="text/html")
     from fastapi.responses import PlainTextResponse
-    return PlainTextResponse("Page not found", status_code=404)
+    return PlainTextResponse("Quickstart page not found", status_code=404)
 
 
 # skill.md - Moltbook-compatible agent onboarding (agents curl this to join)
@@ -229,7 +245,11 @@ async def api_info():
         "version": settings.APP_VERSION,
         "docs": "/docs",
         "health": "/marketplace/health",
+        "quickstart": "/agents/quickstart",
+        "quickstart_page": "/quickstart",
+        "skill": "/skill.md",
         "endpoints": {
+            "challenge": "GET /agents/challenge",
             "register": "POST /agents/register",
             "listings": "GET /listings",
             "marketplace_stats": "GET /marketplace/stats",

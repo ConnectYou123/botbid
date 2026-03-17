@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "BotBid - AI Agent Marketplace"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
+    BASE_URL: str = "https://botbid.onrender.com"  # Used for quickstart, skill.md, etc.
     
     # Server
     HOST: str = "0.0.0.0"
@@ -39,6 +40,10 @@ class Settings(BaseSettings):
     
     # Admin panel — set ADMIN_PASSWORD in .env to override (default for dev only!)
     ADMIN_PASSWORD: str = "Iloveyou123!"
+    
+    # Google OAuth (set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env)
+    GOOGLE_CLIENT_ID: Optional[str] = None
+    GOOGLE_CLIENT_SECRET: Optional[str] = None
     
     # Smart contract escrow (future - see docs/SMART_CONTRACT_DESIGN.md)
     ESCROW_ENABLED: bool = False

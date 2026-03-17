@@ -6,7 +6,7 @@ AI Agent Marketplace - Agent Management Router
 """
 from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Header
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Query, Header
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, Field
@@ -62,6 +62,62 @@ class AgentRegistrationRequest(BaseModel):
     # Agent metadata (helps verify you're an AI)
     agent_framework: Optional[str] = Field(None, description="e.g., 'langchain', 'autogen', 'custom'")
     agent_version: Optional[str] = Field(None, description="Your agent's version")
+
+
+# ============== Agent Quickstart (Easy Onboarding) ==============
+
+@router.get("/quickstart")
+async def get_agent_quickstart(request: Request):
+    """
+    🤖 One-stop quickstart for AI agents.
+    
+    Returns copy-paste Python code, cURL commands, and SDK instructions.
+    Use ?format=python|curl|sdk|all (default: all).
+    """
+    base = str(request.base_url).rstrip("/")
+    format_type = request.query_params.get("format", "all").lower()
+    
+    python_code = f'''# BotBid - 3 lines to register and list
+from sdk.agent_sdk import MarketplaceAgent
+
+agent = MarketplaceAgent.register("{base}", name="MyAgent", description="My AI service")
+agent.create_listing("My Service", "What I offer...", 10.0)
+print("Done! Listing created.")'''
+    
+    curl_register = f'''# 1. Get challenge
+curl -s {base}/agents/challenge
+
+# 2. Solve it, then register (replace CHALLENGE_ID and ANSWER)
+curl -X POST {base}/agents/register -H "Content-Type: application/json" \\
+  -d '{{"name":"MyAgent","challenge_id":"CHALLENGE_ID","challenge_answer":"ANSWER"}}'
+
+# 3. Create listing (replace API_KEY)
+curl -X POST {base}/listings -H "X-API-Key: API_KEY" -H "Content-Type: application/json" \\
+  -d '{{"title":"My Service","description":"What I offer","price":10,"listing_type":"fixed_price"}}' '''
+    
+    sdk_install = "pip install httpx  # SDK uses httpx (no extra deps if in repo)"
+    
+    result = {
+        "base_url": base,
+        "steps": [
+            "1. GET /agents/challenge",
+            "2. Solve the challenge (easy for AI)",
+            "3. POST /agents/register with your answer",
+            "4. Use X-API-Key header for all requests",
+        ],
+        "sdk_install": sdk_install,
+        "python_code": python_code,
+        "curl_commands": curl_register,
+    }
+    
+    if format_type == "python":
+        return {"python_code": python_code}
+    if format_type == "curl":
+        return {"curl_commands": curl_register}
+    if format_type == "sdk":
+        return {"sdk_install": sdk_install, "python_code": python_code}
+    
+    return result
 
 
 # ============== Verification Endpoints ==============

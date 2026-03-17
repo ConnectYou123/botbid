@@ -50,6 +50,7 @@
             <div class="stat"><div class="label">Disputed</div><div class="value" id="txDisputed">-</div></div>
             <div class="stat"><div class="label">Total Volume</div><div class="value" id="volume">-</div></div>
             <div class="stat"><div class="label">Pending Proposals</div><div class="value" id="proposals">-</div></div>
+            <div class="stat"><div class="label">Human Users</div><div class="value" id="humanUsers">-</div></div>
         </div>
 
         <div class="section">
@@ -79,6 +80,13 @@
                 <div class="loading">Loading...</div>
             </div>
         </div>
+
+        <div class="section">
+            <h2>👤 Human Users (Contact List)</h2>
+            <div id="humanUsersTable">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -100,6 +108,7 @@
             document.getElementById('txDisputed').textContent = d.transactions_disputed ?? 0;
             document.getElementById('volume').textContent = (d.total_volume ?? 0).toLocaleString() + ' cr';
             document.getElementById('proposals').textContent = d.pending_proposals ?? 0;
+            document.getElementById('humanUsers').textContent = d.human_users ?? 0;
         }
 
         function badgeClass(s) {
@@ -195,6 +204,31 @@
             `;
         }
 
+        async function loadHumanUsers() {
+            const rows = await fetchWithAuth(API + '/human-users');
+            if (!rows) return;
+            const el = document.getElementById('humanUsersTable');
+            if (!rows.length) { el.innerHTML = '<p class="loading">No human users yet</p>'; return; }
+            el.innerHTML = `
+                <table class="table">
+                    <thead><tr>
+                        <th>ID</th><th>Name</th><th>Email</th><th>Avatar</th><th>Created</th><th>Last Login</th>
+                    </tr></thead>
+                    <tbody>
+                        ${rows.map(u => `
+                            <tr>
+                                <td><code>${u.id.slice(0,8)}</code></td>
+                                <td>${escapeHtml(u.name || '-')}</td>
+                                <td><a href="mailto:${escapeHtml(u.email)}">${escapeHtml(u.email)}</a></td>
+                                <td>${u.avatar_url ? `<img src="${escapeHtml(u.avatar_url)}" alt="" style="width:24px;height:24px;border-radius:50%;">` : '-'}</td>
+                                <td>${u.created_at ? new Date(u.created_at).toLocaleDateString() : '-'}</td>
+                                <td>${u.last_login_at ? new Date(u.last_login_at).toLocaleString() : '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>`;
+        }
+
         async function loadProposals() {
             const rows = await fetchWithAuth(API + '/proposals');
             if (!rows) return;
@@ -234,6 +268,7 @@
             await loadAgents();
             await loadListings();
             await loadProposals();
+            await loadHumanUsers();
         }
 
         init();

@@ -400,6 +400,26 @@ class Rating(Base):
     )
 
 
+class HumanUser(Base):
+    """Human user - signed in via Google OAuth."""
+    __tablename__ = "human_users"
+    
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    google_id: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    avatar_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    last_login_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    
+    __table_args__ = (
+        Index("idx_human_user_google_id", "google_id"),
+        Index("idx_human_user_email", "email"),
+        Index("idx_human_user_created", "created_at"),
+    )
+
+
 class WatchlistItem(Base):
     """Agent's watchlist of listings."""
     __tablename__ = "watchlist"

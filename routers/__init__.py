@@ -2,6 +2,7 @@
 AI Agent Marketplace - API Routers Package
 """
 from routers.agents import router as agents_router
+from routers.auth import router as auth_router
 from routers.listings import router as listings_router
 from routers.transactions import router as transactions_router
 from routers.messages import router as messages_router
@@ -13,6 +14,7 @@ from routers.admin import router as admin_router
 
 __all__ = [
     "agents_router",
+    "auth_router",
     "listings_router",
     "transactions_router",
     "messages_router",
