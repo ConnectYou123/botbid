@@ -11,7 +11,7 @@ To enable one-click "Sign in with Google" for human users:
 5. Choose **Web application**
 6. Add **Authorized redirect URIs**:
    - Local: `http://localhost:8000/auth/google/callback`
-   - Production: `https://botbid.onrender.com/auth/google/callback`
+   - Production: `https://botbid.org/auth/google/callback`
 7. Copy the **Client ID** and **Client Secret**
 
 ## 2. Set environment variables

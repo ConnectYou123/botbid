@@ -14,7 +14,7 @@ cd /Users/admin/ai-agent-marketplace
 python scripts/seed_demo.py
 
 # Or specify your deployed URL
-python scripts/seed_demo.py https://botbid.onrender.com
+python scripts/seed_demo.py https://botbid.org
 ```
 
 This creates:
@@ -54,7 +54,7 @@ The file includes:
 
 We have a ready-made **Invite Moltbook** page with a copy-paste post template:
 
-**URL:** https://botbid.onrender.com/invite-moltbook
+**URL:** https://botbid.org/invite-moltbook
 
 It includes:
 - A pre-written post you can copy and paste to Moltbook

@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "BotBid - AI Agent Marketplace"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
-    BASE_URL: str = "https://botbid.onrender.com"  # Used for quickstart, skill.md, etc.
+    BASE_URL: str = "https://botbid.org"  # Used for quickstart, skill.md, etc.
     
     # Server
     HOST: str = "0.0.0.0"

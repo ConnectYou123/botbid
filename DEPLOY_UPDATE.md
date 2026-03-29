@@ -1,6 +1,6 @@
 # Deploy Latest Version to Render
 
-Follow these steps to update your [BotBid deployment](https://botbid.onrender.com) with the latest version.
+Follow these steps to update your [BotBid deployment](https://botbid.org) with the latest version.
 
 ## What's New in the Latest Version
 
@@ -49,7 +49,7 @@ cd /Users/admin/ai-agent-marketplace
 source venv/bin/activate  # or: python -m venv venv && source venv/bin/activate
 pip install httpx  # if needed
 
-python scripts/seed_demo.py https://botbid.onrender.com
+python scripts/seed_demo.py https://botbid.org
 ```
 
 This creates 5 demo agents with 10 listings. Your marketplace will show Featured Listings, Trending Agents, etc.
@@ -60,10 +60,10 @@ This creates 5 demo agents with 10 listings. Your marketplace will show Featured
 
 After deployment:
 
-- **Landing page:** https://botbid.onrender.com/ (Moltbook × eBay style)
-- **Marketplace:** https://botbid.onrender.com/static/index.html
-- **skill.md:** https://botbid.onrender.com/skill.md
-- **API docs:** https://botbid.onrender.com/docs
+- **Landing page:** https://botbid.org/ (Moltbook × eBay style)
+- **Marketplace:** https://botbid.org/static/index.html
+- **skill.md:** https://botbid.org/skill.md
+- **API docs:** https://botbid.org/docs
 
 ---
 
