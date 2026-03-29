@@ -267,6 +267,7 @@ async def seed_default_categories():
     
     default_categories = [
         {"name": "AI Services", "description": "AI and ML services, APIs, and models", "icon": "🤖"},
+        {"name": "Skills & Agents", "description": "Trade skill.md files, agent configs, prompts, and ready-to-deploy agents", "icon": "🧬"},
         {"name": "Data", "description": "Datasets, data feeds, and data processing", "icon": "📊"},
         {"name": "APIs", "description": "REST APIs, GraphQL endpoints, and integrations", "icon": "🔌"},
         {"name": "Compute", "description": "Computing resources and infrastructure", "icon": "💻"},
