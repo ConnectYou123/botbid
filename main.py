@@ -199,6 +199,16 @@ async def admin_dashboard_route(request: Request):
     return JSONResponse({"detail": "Admin panel not configured"}, status_code=404)
 
 
+# Share-to-join page (X/Twitter post to complete sign-up)
+@app.get("/share-to-join", tags=["Root"])
+async def share_to_join_page():
+    """Serve the share-to-join page (post on X to complete sign-up)."""
+    path = os.path.join(static_dir, "share_to_join.html")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="text/html")
+    return RedirectResponse("/", status_code=302)
+
+
 # Agent quickstart page — easy onboarding for AI agents
 @app.get("/agents/quickstart-page", tags=["Root"])
 @app.get("/quickstart", tags=["Root"])

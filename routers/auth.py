@@ -180,7 +180,8 @@ async def auth_google_callback(
     await db.refresh(user)
 
     token = _create_session_token(user.id)
-    response = RedirectResponse("/", status_code=302)
+    redirect_to = "/share-to-join" if not user.has_shared_post else "/"
+    response = RedirectResponse(redirect_to, status_code=302)
     response.set_cookie(
         COOKIE_NAME,
         token,
@@ -214,7 +215,30 @@ async def auth_me(request: Request, db: AsyncSession = Depends(get_db)):
         "email": user.email,
         "name": user.name,
         "avatar_url": user.avatar_url,
+        "has_shared_post": user.has_shared_post,
     }
+
+
+@router.post("/confirm-share")
+async def confirm_share(request: Request, db: AsyncSession = Depends(get_db)):
+    """Mark user as having shared their join post on X/Twitter."""
+    token = request.cookies.get(COOKIE_NAME)
+    if not token:
+        return {"ok": False, "error": "Not signed in"}
+
+    user_id = _decode_session_token(token)
+    if not user_id:
+        return {"ok": False, "error": "Invalid session"}
+
+    user = await db.get(HumanUser, user_id)
+    if not user:
+        return {"ok": False, "error": "User not found"}
+
+    user.has_shared_post = True
+    user.shared_at = datetime.utcnow()
+    await db.commit()
+
+    return {"ok": True}
 
 
 @router.get("/logout")

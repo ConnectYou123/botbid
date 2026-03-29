@@ -410,6 +410,10 @@ class HumanUser(Base):
     name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     avatar_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     
+    # Social share verification (like Moltbook's X/Twitter requirement)
+    has_shared_post: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    shared_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     last_login_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     

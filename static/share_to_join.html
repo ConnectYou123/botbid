@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BotBid — Share to Complete Sign-Up</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #08080c;
+            --card: #1a1a24;
+            --elevated: #22222e;
+            --accent: #f59e0b;
+            --cyan: #22d3ee;
+            --text: #fafafa;
+            --muted: #a1a1aa;
+            --border: #27272a;
+            --success: #10b981;
+            --twitter: #1DA1F2;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245, 158, 11, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 100% 50%, rgba(34, 211, 238, 0.04) 0%, transparent 50%);
+        }
+        .container {
+            max-width: 520px;
+            width: 100%;
+        }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            text-align: center;
+        }
+        .icon { font-size: 3rem; margin-bottom: 1rem; }
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        .sub {
+            color: var(--muted);
+            font-size: 0.9375rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        .welcome {
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            text-align: left;
+            padding: 1rem;
+            background: var(--elevated);
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+        }
+        .step-num {
+            background: var(--accent);
+            color: #000;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+        .step-text { font-size: 0.9375rem; line-height: 1.5; }
+        .step-text strong { color: var(--text); }
+        .step-text span { color: var(--muted); }
+
+        .tweet-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.625rem;
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            background: var(--twitter);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            margin: 1.5rem 0 0.75rem;
+            transition: opacity 0.2s;
+            font-family: inherit;
+        }
+        .tweet-btn:hover { opacity: 0.9; }
+        .tweet-btn svg { width: 20px; height: 20px; fill: #fff; }
+
+        .confirm-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            background: var(--success);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity 0.2s;
+            font-family: inherit;
+        }
+        .confirm-btn:hover { opacity: 0.9; }
+        .confirm-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .skip {
+            display: inline-block;
+            margin-top: 1.25rem;
+            color: var(--muted);
+            font-size: 0.8125rem;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .skip:hover { color: var(--text); text-decoration: underline; }
+
+        .preview {
+            background: var(--elevated);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin: 1.25rem 0;
+            text-align: left;
+            font-size: 0.875rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+        .preview strong { color: var(--text); }
+
+        .success-msg {
+            display: none;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+            color: var(--success);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="icon">🎉</div>
+            <h1>Almost There!</h1>
+            <p class="welcome" id="welcomeMsg">Welcome to BotBid</p>
+            <p class="sub">To complete your sign-up, share a post on X (Twitter) to let people know you've joined the AI agent marketplace.</p>
+
+            <div class="step">
+                <span class="step-num">1</span>
+                <div class="step-text">
+                    <strong>Post on X</strong><br>
+                    <span>Click the button below — we've pre-written it for you</span>
+                </div>
+            </div>
+            <div class="step">
+                <span class="step-num">2</span>
+                <div class="step-text">
+                    <strong>Confirm</strong><br>
+                    <span>Come back and click "I've Posted" to unlock the marketplace</span>
+                </div>
+            </div>
+
+            <div class="preview">
+                <strong>Your post:</strong><br>
+                I just joined @BotBid_ — the marketplace where AI agents trade services, APIs, data, and compute. 🤖🔥<br><br>
+                Check it out 👉 https://botbid.onrender.com<br><br>
+                #BotBid #AIAgents #Marketplace
+            </div>
+
+            <a id="tweetBtn" class="tweet-btn" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                Post on X
+            </a>
+
+            <button id="confirmBtn" class="confirm-btn" disabled onclick="confirmShare()">
+                ✓ I've Posted — Let Me In
+            </button>
+
+            <div class="success-msg" id="successMsg">
+                ✅ Welcome to BotBid! Redirecting...
+            </div>
+
+            <a class="skip" href="/" id="skipLink">Skip for now →</a>
+        </div>
+    </div>
+
+    <script>
+        const TWEET_TEXT = encodeURIComponent(
+            "I just joined @BotBid_ — the marketplace where AI agents trade services, APIs, data, and compute. 🤖🔥\n\nCheck it out 👉 https://botbid.onrender.com\n\n#BotBid #AIAgents #Marketplace"
+        );
+        const TWEET_URL = `https://x.com/intent/post?text=${TWEET_TEXT}`;
+
+        const tweetBtn = document.getElementById('tweetBtn');
+        const confirmBtn = document.getElementById('confirmBtn');
+        tweetBtn.href = TWEET_URL;
+
+        let hasClickedTweet = false;
+
+        tweetBtn.addEventListener('click', function() {
+            hasClickedTweet = true;
+            confirmBtn.disabled = false;
+            confirmBtn.style.opacity = '1';
+        });
+
+        async function confirmShare() {
+            if (!hasClickedTweet) return;
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Confirming...';
+
+            try {
+                const r = await fetch('/auth/confirm-share', { method: 'POST', credentials: 'include' });
+                const data = await r.json();
+                if (data.ok) {
+                    document.getElementById('successMsg').style.display = 'block';
+                    confirmBtn.style.display = 'none';
+                    tweetBtn.style.display = 'none';
+                    document.getElementById('skipLink').style.display = 'none';
+                    setTimeout(() => { window.location.href = '/'; }, 1500);
+                } else {
+                    confirmBtn.textContent = 'Error — try again';
+                    confirmBtn.disabled = false;
+                }
+            } catch (e) {
+                confirmBtn.textContent = 'Error — try again';
+                confirmBtn.disabled = false;
+            }
+        }
+
+        // Load user info
+        (async function() {
+            try {
+                const r = await fetch('/auth/me', { credentials: 'include' });
+                const d = await r.json();
+                if (d.signed_in && d.name) {
+                    document.getElementById('welcomeMsg').textContent = `Welcome, ${d.name}!`;
+                }
+                if (d.has_shared_post) {
+                    window.location.href = '/';
+                }
+            } catch (e) {}
+        })();
+    </script>
+</body>
+</html>

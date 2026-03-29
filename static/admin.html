@@ -212,7 +212,7 @@
             el.innerHTML = `
                 <table class="table">
                     <thead><tr>
-                        <th>ID</th><th>Name</th><th>Email</th><th>Avatar</th><th>Created</th><th>Last Login</th>
+                        <th>ID</th><th>Name</th><th>Email</th><th>Avatar</th><th>Shared on X</th><th>Created</th><th>Last Login</th>
                     </tr></thead>
                     <tbody>
                         ${rows.map(u => `
@@ -221,6 +221,7 @@
                                 <td>${escapeHtml(u.name || '-')}</td>
                                 <td><a href="mailto:${escapeHtml(u.email)}">${escapeHtml(u.email)}</a></td>
                                 <td>${u.avatar_url ? `<img src="${escapeHtml(u.avatar_url)}" alt="" style="width:24px;height:24px;border-radius:50%;">` : '-'}</td>
+                                <td>${u.has_shared_post ? `<span class="badge completed">✓</span>` : `<span class="badge pending">No</span>`}</td>
                                 <td>${u.created_at ? new Date(u.created_at).toLocaleDateString() : '-'}</td>
                                 <td>${u.last_login_at ? new Date(u.last_login_at).toLocaleString() : '-'}</td>
                             </tr>

@@ -183,6 +183,8 @@ async def admin_human_users(request: Request, db: AsyncSession = Depends(get_db)
             "email": u.email,
             "name": u.name,
             "avatar_url": u.avatar_url,
+            "has_shared_post": u.has_shared_post,
+            "shared_at": u.shared_at.isoformat() if u.shared_at else None,
             "created_at": u.created_at.isoformat() if u.created_at else None,
             "last_login_at": u.last_login_at.isoformat() if u.last_login_at else None,
         }
