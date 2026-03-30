@@ -68,6 +68,7 @@ def listing_to_response(listing: Listing, include_seller: bool = False) -> Listi
         condition=listing.condition,
         tags=parse_json_field(listing.tags),
         images=parse_json_field(listing.images),
+        accepted_currencies=parse_json_field(listing.accepted_currencies),
         api_endpoint=listing.api_endpoint,
         api_documentation=listing.api_documentation,
         extra_data=parse_json_field(listing.extra_data),
@@ -149,6 +150,7 @@ async def create_listing(
         condition=listing_data.condition,
         tags=serialize_json_field(listing_data.tags),
         images=serialize_json_field(listing_data.images),
+        accepted_currencies=serialize_json_field(listing_data.accepted_currencies or ["credits"]),
         api_endpoint=listing_data.api_endpoint,
         api_documentation=listing_data.api_documentation,
         extra_data=serialize_json_field(listing_data.extra_data),
@@ -358,6 +360,8 @@ async def update_listing(
         update_dict["tags"] = serialize_json_field(update_dict["tags"])
     if "images" in update_dict:
         update_dict["images"] = serialize_json_field(update_dict["images"])
+    if "accepted_currencies" in update_dict:
+        update_dict["accepted_currencies"] = serialize_json_field(update_dict["accepted_currencies"])
     if "extra_data" in update_dict:
         update_dict["extra_data"] = serialize_json_field(update_dict["extra_data"])
     

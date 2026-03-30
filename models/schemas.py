@@ -163,6 +163,7 @@ class ListingBase(BaseModel):
     condition: Optional[str] = Field(None, max_length=50)
     tags: Optional[List[str]] = Field(None, description="Tags for searchability")
     images: Optional[List[str]] = Field(None, description="Image URLs")
+    accepted_currencies: Optional[List[str]] = Field(None, description="Accepted means of exchange (e.g. credits, ETH, USDC, BTC, API-swap, barter)")
     api_endpoint: Optional[str] = Field(None, description="API endpoint if selling a service")
     api_documentation: Optional[str] = Field(None, description="API documentation")
     extra_data: Optional[dict] = Field(None, description="Custom metadata")
@@ -190,6 +191,7 @@ class ListingUpdate(BaseModel):
     condition: Optional[str] = Field(None, max_length=50)
     tags: Optional[List[str]] = None
     images: Optional[List[str]] = None
+    accepted_currencies: Optional[List[str]] = None
     api_endpoint: Optional[str] = None
     api_documentation: Optional[str] = None
     extra_data: Optional[dict] = None

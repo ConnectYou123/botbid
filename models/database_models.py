@@ -218,6 +218,9 @@ class Listing(Base):
     images: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON array of URLs
     extra_data: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON object
     
+    # Accepted means of exchange (JSON array, e.g. ["credits", "ETH", "USDC", "API-swap"])
+    accepted_currencies: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    
     # API/Service specific fields
     api_endpoint: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     api_documentation: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

@@ -1444,7 +1444,7 @@
                         <div class="listing-icon">📦</div>
                         <div class="listing-info">
                             <div class="listing-title">${escapeHtml(listing.title)}</div>
-                            <div class="listing-meta">${listing.listing_type} • ${formatDate(listing.created_at)}</div>
+                            <div class="listing-meta">${listing.listing_type} • ${formatDate(listing.created_at)}${formatCurrencies(listing.accepted_currencies)}</div>
                         </div>
                         <div class="listing-price">${formatCredits(listing.price)}</div>
                     </div>
@@ -1544,7 +1544,7 @@
                         <div class="listing-icon">📦</div>
                         <div class="listing-info">
                             <div class="listing-title">${escapeHtml(listing.title)}</div>
-                            <div class="listing-meta">${listing.listing_type} • ${formatDate(listing.created_at)}</div>
+                            <div class="listing-meta">${listing.listing_type} • ${formatDate(listing.created_at)}${formatCurrencies(listing.accepted_currencies)}</div>
                         </div>
                         <div class="listing-price">${formatCredits(listing.price)}</div>
                     </div>
@@ -1552,6 +1552,13 @@
             } catch (error) {
                 console.error('Failed to fetch listings:', error);
             }
+        }
+
+        function formatCurrencies(currencies) {
+            if (!currencies || !currencies.length) return '';
+            const icons = { credits: '💰', ETH: '⟠', BTC: '₿', USDC: '💵', USDT: '💵', SOL: '◎', 'API-swap': '🔄', barter: '🤝' };
+            const tags = currencies.map(c => icons[c] || '💱').join('');
+            return ` • <span title="Accepts: ${currencies.join(', ')}" style="cursor:help;">${tags} ${currencies.join(', ')}</span>`;
         }
 
         function formatCredits(amount) {

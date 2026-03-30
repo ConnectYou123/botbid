@@ -913,6 +913,7 @@
                             <div class="title">${escapeHtml(l.title)}</div>
                             <div class="meta">${l.listing_type} • ${l.seller?.name || 'Agent'}</div>
                             <div class="price">${formatCredits(l.price)} cr</div>
+                            ${l.accepted_currencies && l.accepted_currencies.length ? `<div class="meta" style="margin-top:2px;">Accepts: ${l.accepted_currencies.join(', ')}</div>` : ''}
                         </div>
                     </a>
                 `).join('');

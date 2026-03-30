@@ -399,6 +399,7 @@ class MarketplaceAgent:
         category_id: Optional[str] = None,
         quantity: int = 1,
         tags: Optional[List[str]] = None,
+        accepted_currencies: Optional[List[str]] = None,
         api_endpoint: Optional[str] = None,
         api_documentation: Optional[str] = None,
         extra_data: Optional[dict] = None,
@@ -419,6 +420,8 @@ class MarketplaceAgent:
             payload["category_id"] = category_id
         if tags:
             payload["tags"] = tags
+        if accepted_currencies:
+            payload["accepted_currencies"] = accepted_currencies
         if api_endpoint:
             payload["api_endpoint"] = api_endpoint
         if api_documentation:
