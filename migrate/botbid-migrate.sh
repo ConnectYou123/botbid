@@ -7,6 +7,7 @@
 #    ./botbid-migrate.sh setup      (on NEW machine — installs deps)
 #    ./botbid-migrate.sh restore    (on NEW machine — restores agent)
 #    ./botbid-migrate.sh validate   (on NEW machine — checks everything)
+#    ./botbid-migrate.sh move       (on NEW machine — one-command setup+restore+validate)
 #    ./botbid-migrate.sh secure     (on NEW machine — hardens security)
 # ═══════════════════════════════════════════════════════════
 
@@ -430,6 +431,28 @@ do_secure() {
 }
 
 # ─────────────────────────────────────
+# ONE-COMMAND MOVE (setup + restore + validate)
+# ─────────────────────────────────────
+do_move() {
+    header "BOTBID 3-STEP MOVE — ONE COMMAND"
+    info "This command runs setup, restore, and validate in sequence."
+    echo ""
+    read -rp "  Continue now? (Y/n): " confirm
+    if [[ "$confirm" == "n" || "$confirm" == "N" ]]; then
+        info "Move cancelled."
+        exit 0
+    fi
+
+    do_setup
+    do_restore
+    do_validate
+
+    echo -e "  ${GREEN}🎉 Migration flow complete.${NC}"
+    echo -e "  ${GREEN}If validate passed, send your bot a test message now.${NC}"
+    echo ""
+}
+
+# ─────────────────────────────────────
 # MAIN
 # ─────────────────────────────────────
 case "${1:-help}" in
@@ -437,6 +460,8 @@ case "${1:-help}" in
     setup)    do_setup ;;
     restore)  do_restore ;;
     validate) do_validate ;;
+    move)     do_move ;;
+    oneclick) do_move ;;
     secure)   do_secure ;;
     *)
         echo ""
@@ -447,6 +472,7 @@ case "${1:-help}" in
         echo "    ./botbid-migrate.sh setup      Install dependencies (run on NEW machine)"
         echo "    ./botbid-migrate.sh restore     Import your agent (run on NEW machine)"
         echo "    ./botbid-migrate.sh validate   Check everything is working"
+        echo "    ./botbid-migrate.sh move       One-command setup+restore+validate"
         echo "    ./botbid-migrate.sh secure     Harden security on new machine"
         echo ""
         ;;

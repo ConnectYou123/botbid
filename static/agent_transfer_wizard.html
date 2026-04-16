@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BotBid - Transfer Wizard</title>
+    <style>
+        :root {
+            --bg: #0a1020;
+            --card: #131c36;
+            --border: #2b3a65;
+            --text: #e8eeff;
+            --muted: #aab8df;
+            --accent: #4ea1ff;
+            --good: #22c55e;
+            --warn: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: radial-gradient(circle at 10% 0%, #1d2c56, var(--bg) 40%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 24px;
+        }
+        .container { max-width: 940px; margin: 0 auto; }
+        h1 { font-size: 2rem; margin-bottom: 8px; }
+        .sub { color: var(--muted); margin-bottom: 18px; }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            border: 1px solid var(--border);
+            background: #101933;
+            color: var(--text);
+            border-radius: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .tab.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px rgba(78, 161, 255, 0.25) inset;
+        }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 14px;
+        }
+        .progress-wrap {
+            background: #101833;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 8px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #0b132a;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4ea1ff, #22c55e);
+            transition: width 0.25s ease;
+        }
+        .progress-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--muted);
+            font-size: 0.88rem;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .stage-list {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(180px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        @media (max-width: 820px) {
+            .stage-list { grid-template-columns: 1fr; }
+        }
+        .stage {
+            border: 1px solid var(--border);
+            background: #0d1630;
+            border-radius: 10px;
+            padding: 10px;
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+        .stage strong { color: var(--text); font-size: 0.92rem; }
+        .stage.done { border-color: rgba(34, 197, 94, 0.5); }
+        .stage.running { border-color: rgba(78, 161, 255, 0.6); }
+        .stage-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .tiny-btn {
+            border: 1px solid var(--border);
+            background: #112048;
+            color: var(--text);
+            border-radius: 8px;
+            padding: 6px 9px;
+            cursor: pointer;
+            font-size: 0.78rem;
+        }
+        .tiny-btn:hover { border-color: var(--accent); }
+        h2 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+        p, li {
+            color: var(--muted);
+            line-height: 1.5;
+        }
+        ul { margin-left: 18px; margin-top: 8px; }
+        .cmd {
+            margin-top: 12px;
+            background: #0a142d;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            position: relative;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-x: auto;
+            color: #9fd1ff;
+            font-size: 0.92rem;
+            padding-right: 74px;
+        }
+        .copy {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            border: 1px solid var(--border);
+            background: #142249;
+            color: var(--text);
+            border-radius: 8px;
+            padding: 6px 9px;
+            cursor: pointer;
+            font-size: 0.78rem;
+        }
+        .badge {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .b-old { background: rgba(245, 158, 11, 0.2); color: #ffd28a; border: 1px solid rgba(245, 158, 11, 0.45); }
+        .b-new { background: rgba(34, 197, 94, 0.2); color: #acf1c0; border: 1px solid rgba(34, 197, 94, 0.45); }
+        .hidden { display: none; }
+        .note {
+            margin-top: 10px;
+            border: 1px solid rgba(245, 158, 11, 0.45);
+            background: rgba(245, 158, 11, 0.13);
+            border-radius: 10px;
+            padding: 10px;
+            color: #ffe2b3;
+            font-size: 0.92rem;
+        }
+        a { color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Agent Transfer Wizard</h1>
+        <p class="sub">Fastest path for end users: install helper, backup old machine, run one command on new machine.</p>
+
+        <div class="tabs">
+            <button class="tab active" data-target="all" onclick="showTab('all')">All Steps</button>
+            <button class="tab" data-target="old" onclick="showTab('old')">Old Computer</button>
+            <button class="tab" data-target="new" onclick="showTab('new')">New Computer</button>
+        </div>
+
+        <div class="card">
+            <h2>Live Progress Tracker</h2>
+            <p>Keep this page open while users run commands in Terminal. Progress is saved in your browser.</p>
+            <div class="progress-wrap">
+                <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                <div class="progress-meta">
+                    <span id="progressText">0% complete</span>
+                    <span id="waitingText">No active step running</span>
+                </div>
+                <div class="stage-list">
+                    <div class="stage" id="stage-1"><strong>Step 1</strong><br>Install helper</div>
+                    <div class="stage" id="stage-2"><strong>Step 2</strong><br>Create backup</div>
+                    <div class="stage" id="stage-3"><strong>Step 3</strong><br>Move + restore</div>
+                </div>
+                <div class="stage-buttons">
+                    <button class="tiny-btn" onclick="startStage(1)">Start Step 1</button>
+                    <button class="tiny-btn" onclick="completeStage(1)">Complete Step 1</button>
+                    <button class="tiny-btn" onclick="startStage(2)">Start Step 2</button>
+                    <button class="tiny-btn" onclick="completeStage(2)">Complete Step 2</button>
+                    <button class="tiny-btn" onclick="startStage(3)">Start Step 3</button>
+                    <button class="tiny-btn" onclick="completeStage(3)">Complete Step 3</button>
+                    <button class="tiny-btn" onclick="resetTracker()">Reset Progress</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Step 1: Install Transfer Helper (both computers)</h2>
+            <p>Paste this command in Terminal on both the old and new machines:</p>
+            <div class="cmd">
+                <pre id="cmd-install">curl -sSL https://botbid.org/agent-transfer/install.sh | bash</pre>
+                <button class="copy" onclick="copyText('cmd-install', this)">Copy</button>
+            </div>
+        </div>
+
+        <div class="card section-old section-all">
+            <span class="badge b-old">OLD COMPUTER</span>
+            <h2>Step 2: Create backup</h2>
+            <p>Run this command on the old machine. It creates a backup on your Desktop.</p>
+            <div class="cmd">
+                <pre id="cmd-old">~/botbid-transfer/botbid-migrate.sh backup</pre>
+                <button class="copy" onclick="copyText('cmd-old', this)">Copy</button>
+            </div>
+            <ul>
+                <li>Move the backup file `openclaw-backup-*.tar.gz` to the new machine Desktop.</li>
+            </ul>
+        </div>
+
+        <div class="card section-new section-all">
+            <span class="badge b-new">NEW COMPUTER</span>
+            <h2>Step 3: One-command restore + verify</h2>
+            <p>Run this on the new machine. It installs dependencies, restores, patches paths, and validates.</p>
+            <div class="cmd">
+                <pre id="cmd-new">~/botbid-transfer/botbid-migrate.sh move</pre>
+                <button class="copy" onclick="copyText('cmd-new', this)">Copy</button>
+            </div>
+            <p style="margin-top: 10px;">After test message succeeds, stop the old machine gateway:</p>
+            <div class="cmd">
+                <pre id="cmd-stop-old">openclaw gateway stop</pre>
+                <button class="copy" onclick="copyText('cmd-stop-old', this)">Copy</button>
+            </div>
+            <div class="note">
+                Never run both machines at once with the same Telegram bot token.
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Need the plain guide?</h2>
+            <p>Use the static 3-step page at <a href="/agent-transfer">/agent-transfer</a>.</p>
+        </div>
+    </div>
+
+    <script>
+        const TRACKER_KEY = "botbid_transfer_progress_v1";
+        let trackerState = { started: 0, completed: [false, false, false], startedAt: 0 };
+        let waitingInterval = null;
+
+        function copyText(id, button) {
+            const text = document.getElementById(id).textContent.trim();
+            navigator.clipboard.writeText(text);
+            const old = button.textContent;
+            button.textContent = "Copied";
+            setTimeout(() => { button.textContent = old; }, 1200);
+        }
+
+        function saveTracker() {
+            localStorage.setItem(TRACKER_KEY, JSON.stringify(trackerState));
+        }
+
+        function loadTracker() {
+            try {
+                const raw = localStorage.getItem(TRACKER_KEY);
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed.completed) && parsed.completed.length === 3) {
+                    trackerState = parsed;
+                }
+            } catch (e) {
+                console.warn("Tracker load failed", e);
+            }
+        }
+
+        function formatDuration(ms) {
+            const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+            const min = Math.floor(totalSeconds / 60);
+            const sec = totalSeconds % 60;
+            return `${min}m ${String(sec).padStart(2, "0")}s`;
+        }
+
+        function renderTracker() {
+            const completedCount = trackerState.completed.filter(Boolean).length;
+            const pct = Math.round((completedCount / 3) * 100);
+            document.getElementById("progressFill").style.width = `${pct}%`;
+            document.getElementById("progressText").textContent = `${pct}% complete (${completedCount}/3 steps)`;
+
+            [1, 2, 3].forEach((idx) => {
+                const el = document.getElementById(`stage-${idx}`);
+                el.classList.remove("running", "done");
+                if (trackerState.completed[idx - 1]) {
+                    el.classList.add("done");
+                } else if (trackerState.started === idx) {
+                    el.classList.add("running");
+                }
+            });
+
+            if (waitingInterval) {
+                clearInterval(waitingInterval);
+                waitingInterval = null;
+            }
+
+            const waitingEl = document.getElementById("waitingText");
+            if (trackerState.started > 0 && !trackerState.completed[trackerState.started - 1] && trackerState.startedAt > 0) {
+                const stage = trackerState.started;
+                const tick = () => {
+                    const elapsed = Date.now() - trackerState.startedAt;
+                    waitingEl.textContent = `Step ${stage} running for ${formatDuration(elapsed)}`;
+                };
+                tick();
+                waitingInterval = setInterval(tick, 1000);
+            } else if (completedCount === 3) {
+                waitingEl.textContent = "All steps complete. Ready to test on new Mac.";
+            } else {
+                waitingEl.textContent = "No active step running";
+            }
+        }
+
+        function startStage(stage) {
+            trackerState.started = stage;
+            trackerState.startedAt = Date.now();
+            saveTracker();
+            renderTracker();
+        }
+
+        function completeStage(stage) {
+            trackerState.completed[stage - 1] = true;
+            if (trackerState.started === stage) {
+                trackerState.started = 0;
+                trackerState.startedAt = 0;
+            }
+            saveTracker();
+            renderTracker();
+        }
+
+        function resetTracker() {
+            trackerState = { started: 0, completed: [false, false, false], startedAt: 0 };
+            saveTracker();
+            renderTracker();
+        }
+
+        function showTab(tab) {
+            const tabs = document.querySelectorAll(".tab");
+            tabs.forEach(t => t.classList.remove("active"));
+            document.querySelector(`.tab[data-target="${tab}"]`).classList.add("active");
+
+            const oldSections = document.querySelectorAll(".section-old");
+            const newSections = document.querySelectorAll(".section-new");
+
+            if (tab === "all") {
+                oldSections.forEach(s => s.classList.remove("hidden"));
+                newSections.forEach(s => s.classList.remove("hidden"));
+            } else if (tab === "old") {
+                oldSections.forEach(s => s.classList.remove("hidden"));
+                newSections.forEach(s => s.classList.add("hidden"));
+            } else {
+                oldSections.forEach(s => s.classList.add("hidden"));
+                newSections.forEach(s => s.classList.remove("hidden"));
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadTracker();
+            renderTracker();
+        });
+    </script>
+</body>
+</html>

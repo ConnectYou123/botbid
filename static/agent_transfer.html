@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BotBid - Agent Transfer (3 Steps)</title>
+    <style>
+        :root {
+            --bg: #0b1020;
+            --card: #131b33;
+            --border: #233155;
+            --text: #e6ecff;
+            --muted: #a6b5dd;
+            --accent: #4ea1ff;
+            --accent-2: #6ee7b7;
+            --warn: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: radial-gradient(circle at top, #162447, var(--bg));
+            color: var(--text);
+            min-height: 100vh;
+            padding: 24px;
+        }
+        .container { max-width: 840px; margin: 0 auto; }
+        h1 { font-size: 2rem; margin-bottom: 8px; }
+        .sub { color: var(--muted); margin-bottom: 24px; }
+        .step {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 14px;
+        }
+        .step h2 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+        .step p { color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
+        pre {
+            background: #0a1328;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #9fd3ff;
+            font-size: 0.92rem;
+        }
+        .note {
+            margin-top: 20px;
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.45);
+            border-radius: 12px;
+            padding: 14px;
+            color: #ffd7a1;
+            line-height: 1.5;
+        }
+        .success {
+            margin-top: 16px;
+            color: var(--accent-2);
+            font-weight: 600;
+        }
+        a { color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Swap Your Agent to a New Computer</h1>
+        <p class="sub">Built for non-technical users. Just follow these 3 steps.</p>
+
+        <div class="step">
+            <h2>Step 1: Create backup on old computer</h2>
+            <p>Open Terminal on your old machine and run:</p>
+            <pre>cd ~/Downloads/BOTBID\ BACK\ UP/migrate
+./botbid-migrate.sh backup</pre>
+        </div>
+
+        <div class="step">
+            <h2>Step 2: Move backup file</h2>
+            <p>AirDrop (or USB) these to the new computer Desktop:</p>
+            <pre>1) openclaw-backup-*.tar.gz
+2) BOTBID BACK UP folder (includes migrate scripts)</pre>
+        </div>
+
+        <div class="step">
+            <h2>Step 3: One command on new computer</h2>
+            <p>Open Terminal on the new machine and run:</p>
+            <pre>cd ~/Downloads/BOTBID\ BACK\ UP/migrate
+./botbid-migrate.sh move</pre>
+            <p>This one command installs dependencies, restores your agent, patches paths, and validates everything.</p>
+        </div>
+
+        <div class="note">
+            <strong>Important:</strong> only run one machine per Telegram bot token. After testing on the new machine, stop the old machine gateway:
+            <pre>openclaw gateway stop</pre>
+        </div>
+
+        <p class="success">Done. Your agent should respond exactly the same on the new computer.</p>
+        <p style="margin-top: 12px; color: var(--muted);">Want interactive copy/paste mode? Use <a href="/agent-transfer/wizard">Transfer Wizard</a>.</p>
+        <p style="margin-top: 12px; color: var(--muted);">Need API-level docs too? See <a href="/docs">API Docs</a>.</p>
+    </div>
+</body>
+</html>

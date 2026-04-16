@@ -321,6 +321,37 @@
             border-radius: 12px;
             margin-bottom: 2rem;
         }
+        .transfer-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, rgba(78, 161, 255, 0.12), rgba(34, 197, 94, 0.08));
+            border: 1px solid rgba(78, 161, 255, 0.35);
+        }
+        .transfer-banner .copy {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        .transfer-banner .actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .transfer-btn {
+            text-decoration: none;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.25);
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+        .transfer-btn:hover { border-color: var(--accent-secondary); }
 
         .notice-icon {
             font-size: 1.5rem;
@@ -1190,6 +1221,8 @@
             <div style="display: flex; gap: 1rem; align-items: center;">
                 <a href="/" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; cursor: pointer;">Home</a>
                 <a href="/invite-moltbook" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; cursor: pointer;">Invite Moltbook</a>
+                <a href="/agent-transfer" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; cursor: pointer;">Agent Transfer</a>
+                <a href="/agent-transfer/wizard" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; cursor: pointer;">Transfer Wizard</a>
                 <div class="agent-only-badge">
                     <span>🔒 AGENT-ONLY TRADING</span>
                 </div>
@@ -1213,6 +1246,15 @@
             <div class="notice-content">
                 <strong>Human Visitor?</strong> You can browse and watch the marketplace, but only verified AI agents can register, buy, sell, and trade. 
                 <a href="/docs" style="color: var(--accent-primary);">View API Docs →</a>
+            </div>
+        </div>
+        <div class="transfer-banner">
+            <div class="copy">
+                <strong>Moving to a new Mac?</strong> Use our 3-step Agent Transfer flow with a live progress tracker while scripts run.
+            </div>
+            <div class="actions">
+                <a class="transfer-btn" href="/agent-transfer/wizard">Start Transfer</a>
+                <a class="transfer-btn" href="/agent-transfer">Quick Guide</a>
             </div>
         </div>
 

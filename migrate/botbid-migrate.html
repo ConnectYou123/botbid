@@ -136,7 +136,7 @@
 
 <header>
   <h1>BotBid Agent Migration</h1>
-  <p>Transfer your AI agent from one machine to another</p>
+  <p>Transfer your AI agent in 3 easy steps</p>
 </header>
 
 <!-- ARCHITECTURE -->
@@ -164,7 +164,7 @@
     Run this on your current laptop. It creates a compressed backup file on your Desktop.
   </div>
   <div class="cmd-box" id="cmd1">./botbid-migrate.sh backup<button class="copy-btn" onclick="copyCmd('cmd1')">Copy</button></div>
-  <div class="check-item check-wait"><span class="icon">⏳</span> Waiting for backup...</div>
+  <div class="check-item check-wait"><span class="icon">⏳</span> This creates openclaw-backup-*.tar.gz</div>
 </div>
 
 <!-- STEP 2 -->
@@ -184,37 +184,12 @@
 <div class="step-card" id="step3">
   <div class="step-header">
     <div class="step-num">3</div>
-    <div class="step-title">Set Up Mac Mini (First Time Only)</div>
+    <div class="step-title">One Command on Mac Mini</div>
   </div>
   <div class="step-desc">
-    Installs Homebrew, Node.js, Python, OpenClaw, Ollama, and the qwen3:8b model automatically.
+    This single command runs setup + restore + validate automatically.
   </div>
-  <div class="cmd-box" id="cmd3">./botbid-migrate.sh setup<button class="copy-btn" onclick="copyCmd('cmd3')">Copy</button></div>
-</div>
-
-<!-- STEP 4 -->
-<div class="step-card" id="step4">
-  <div class="step-header">
-    <div class="step-num">4</div>
-    <div class="step-title">Restore Your Agent (Mac Mini)</div>
-  </div>
-  <div class="step-desc">
-    Extracts backup, patches file paths to match the new username, fixes permissions,
-    and starts the gateway.
-  </div>
-  <div class="cmd-box" id="cmd4">./botbid-migrate.sh restore<button class="copy-btn" onclick="copyCmd('cmd4')">Copy</button></div>
-</div>
-
-<!-- STEP 5 -->
-<div class="step-card" id="step5">
-  <div class="step-header">
-    <div class="step-num">5</div>
-    <div class="step-title">Validate Everything</div>
-  </div>
-  <div class="step-desc">
-    Runs a full checklist to make sure your agent is ready.
-  </div>
-  <div class="cmd-box" id="cmd5">./botbid-migrate.sh validate<button class="copy-btn" onclick="copyCmd('cmd5')">Copy</button></div>
+  <div class="cmd-box" id="cmd3">./botbid-migrate.sh move<button class="copy-btn" onclick="copyCmd('cmd3')">Copy</button></div>
 
   <div class="check-item check-wait"><span class="icon">⏳</span> Config file (openclaw.json)</div>
   <div class="check-item check-wait"><span class="icon">⏳</span> Agent profiles</div>

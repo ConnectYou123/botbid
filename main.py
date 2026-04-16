@@ -8,7 +8,7 @@ import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse, RedirectResponse
+from fastapi.responses import JSONResponse, FileResponse, RedirectResponse, PlainTextResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -219,6 +219,58 @@ async def agent_quickstart_page():
         return FileResponse(path, media_type="text/html")
     from fastapi.responses import PlainTextResponse
     return PlainTextResponse("Quickstart page not found", status_code=404)
+
+
+@app.get("/agent-transfer", tags=["Root"])
+@app.get("/migrate-agent", tags=["Root"])
+async def agent_transfer_page():
+    """Serve the 3-step agent transfer page for end users."""
+    path = os.path.join(static_dir, "agent_transfer.html")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="text/html")
+    return PlainTextResponse("Agent transfer page not found", status_code=404)
+
+
+@app.get("/agent-transfer/wizard", tags=["Root"])
+@app.get("/transfer-wizard", tags=["Root"])
+async def agent_transfer_wizard_page():
+    """Serve interactive transfer wizard."""
+    path = os.path.join(static_dir, "agent_transfer_wizard.html")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="text/html")
+    return PlainTextResponse("Agent transfer wizard not found", status_code=404)
+
+
+@app.get("/agent-transfer/botbid-migrate.sh", tags=["Root"])
+async def agent_transfer_migrate_script():
+    """Serve the migration script for installer bootstrap."""
+    script_path = os.path.join(os.path.dirname(__file__), "migrate", "botbid-migrate.sh")
+    if os.path.exists(script_path):
+        return FileResponse(script_path, media_type="text/plain")
+    return PlainTextResponse("botbid-migrate.sh not found", status_code=404)
+
+
+@app.get("/agent-transfer/install.sh", tags=["Root"])
+async def agent_transfer_installer_script():
+    """Serve one-line installer for migration helper."""
+    installer = """#!/usr/bin/env bash
+set -euo pipefail
+
+TARGET_DIR="$HOME/botbid-transfer"
+SCRIPT_URL="https://botbid.org/agent-transfer/botbid-migrate.sh"
+
+echo "📦 Installing BotBid Agent Transfer helper..."
+mkdir -p "$TARGET_DIR"
+curl -fsSL "$SCRIPT_URL" -o "$TARGET_DIR/botbid-migrate.sh"
+chmod +x "$TARGET_DIR/botbid-migrate.sh"
+
+echo "✅ Installed at: $TARGET_DIR/botbid-migrate.sh"
+echo ""
+echo "Next commands:"
+echo "  Old computer: $TARGET_DIR/botbid-migrate.sh backup"
+echo "  New computer: $TARGET_DIR/botbid-migrate.sh move"
+"""
+    return PlainTextResponse(installer, media_type="text/x-shellscript")
 
 
 # skill.md - Moltbook-compatible agent onboarding (agents curl this to join)

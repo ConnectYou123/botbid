@@ -1,6 +1,6 @@
 # BotBid Agent Migration Tool
 
-Transfer your AI agent from one Mac to another in 5 simple steps.
+Transfer your AI agent from one Mac to another in 3 simple steps.
 
 ---
 
@@ -10,7 +10,15 @@ Moves your entire OpenClaw AI agent (Dover) — including personality, skills, c
 
 ---
 
-## 5 Steps to Move Your Agent
+## 3 Steps to Move Your Agent
+
+### Optional One-Line Installer (Both Machines)
+
+```bash
+curl -sSL https://botbid.org/agent-transfer/install.sh | bash
+```
+
+This installs `~/botbid-transfer/botbid-migrate.sh` so users can run commands without navigating folders.
 
 ### Step 1: Backup (Old Laptop)
 
@@ -32,32 +40,19 @@ Move the backup file to the Mac Mini's Desktop using:
 
 Also copy the entire `BOTBID BACK UP` folder (it has the migration scripts).
 
-### Step 3: Setup Mac Mini (First Time)
+### Step 3: One Command on Mac Mini
 
 On the Mac Mini, open Terminal:
 
 ```bash
 cd ~/Downloads/BOTBID\ BACK\ UP/migrate
-./botbid-migrate.sh setup
+./botbid-migrate.sh move
 ```
 
-This installs everything needed: Homebrew, Node.js, Python, OpenClaw, Ollama, and your AI model.
-
-### Step 4: Restore Your Agent
-
-```bash
-./botbid-migrate.sh restore
-```
-
-It will ask for your old laptop username and automatically fix all file paths.
-
-### Step 5: Validate
-
-```bash
-./botbid-migrate.sh validate
-```
-
-You'll see a checklist of green checks. Once everything passes, send Dover a test message on Telegram.
+This single command automatically runs:
+- `setup` (installs Homebrew/Node/Python/OpenClaw/Ollama/model)
+- `restore` (imports backup, patches username paths, starts gateway)
+- `validate` (runs full checklist)
 
 ---
 
@@ -114,7 +109,7 @@ Open `botbid-migrate.html` in your browser for a visual step-by-step guide with 
 
 | File | Purpose |
 |------|---------|
-| `botbid-migrate.sh` | Main migration script (backup/setup/restore/validate/secure) |
+| `botbid-migrate.sh` | Main migration script (backup/setup/restore/validate/move/secure) |
 | `botbid-agent-transfer.js` | Node.js module for BotBid marketplace agent transfers |
 | `botbid-migrate.html` | Visual guide with copy-paste commands |
 | `README.md` | This file |
