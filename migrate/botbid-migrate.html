@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BotBid — Agent Migration</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0a0e27;
+    color: #e0e6f0;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container { max-width: 720px; margin: 0 auto; }
+
+  header {
+    text-align: center;
+    padding: 40px 0 30px;
+  }
+  header h1 {
+    font-size: 2.2rem;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  header p { color: #94a3b8; font-size: 1.05rem; }
+
+  .step-card {
+    background: #111838;
+    border: 1px solid #1e2a5a;
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 18px;
+    transition: border-color 0.3s;
+  }
+  .step-card:hover { border-color: #3b82f6; }
+  .step-card.done { border-color: #22c55e; }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .step-num {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1.1rem; color: #fff;
+    flex-shrink: 0;
+  }
+  .step-card.done .step-num { background: #22c55e; }
+  .step-title { font-size: 1.2rem; font-weight: 600; }
+  .step-desc { color: #94a3b8; font-size: 0.95rem; margin-bottom: 16px; line-height: 1.5; }
+
+  .cmd-box {
+    background: #0d1117;
+    border: 1px solid #1e2a5a;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.9rem;
+    color: #7dd3fc;
+    margin-bottom: 14px;
+    position: relative;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .copy-btn {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: #1e2a5a;
+    border: none;
+    color: #94a3b8;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+  }
+  .copy-btn:hover { background: #3b82f6; color: #fff; }
+
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    font-size: 0.95rem;
+  }
+  .check-item .icon { font-size: 1.2rem; }
+  .check-ok .icon { color: #22c55e; }
+  .check-fail .icon { color: #ef4444; }
+  .check-wait .icon { color: #94a3b8; }
+
+  .warning-box {
+    background: #1a1207;
+    border: 1px solid #854d0e;
+    border-radius: 10px;
+    padding: 18px;
+    margin-top: 20px;
+    color: #fbbf24;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .architecture-box {
+    background: #0d1117;
+    border: 1px solid #1e2a5a;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 30px;
+    margin-bottom: 20px;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    line-height: 1.8;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    white-space: pre;
+    overflow-x: auto;
+  }
+
+  footer {
+    text-align: center;
+    padding: 30px 0;
+    color: #475569;
+    font-size: 0.85rem;
+  }
+  footer a { color: #3b82f6; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>BotBid Agent Migration</h1>
+  <p>Transfer your AI agent from one machine to another</p>
+</header>
+
+<!-- ARCHITECTURE -->
+<div class="architecture-box">What Gets Transferred:
+
+~/.openclaw/
+  ├── openclaw.json        Config (model, channels, gateway)
+  ├── workspace/            Agent memory & personality
+  │   ├── SOUL.md           Who Dover is
+  │   ├── AGENTS.md         Rules & project info
+  │   ├── COMMANDS.md       Command reference
+  │   └── PROVIDERS.md      Provider directory
+  ├── skills/               Python scripts (code tools, Moltbook, BotBid)
+  ├── credentials/          API keys (Telegram, BotBid, Moltbook, Facebook)
+  ├── agents/               Session history
+  └── cron/                 Scheduled jobs</div>
+
+<!-- STEP 1 -->
+<div class="step-card" id="step1">
+  <div class="step-header">
+    <div class="step-num">1</div>
+    <div class="step-title">Backup Your Agent (Old Machine)</div>
+  </div>
+  <div class="step-desc">
+    Run this on your current laptop. It creates a compressed backup file on your Desktop.
+  </div>
+  <div class="cmd-box" id="cmd1">./botbid-migrate.sh backup<button class="copy-btn" onclick="copyCmd('cmd1')">Copy</button></div>
+  <div class="check-item check-wait"><span class="icon">⏳</span> Waiting for backup...</div>
+</div>
+
+<!-- STEP 2 -->
+<div class="step-card" id="step2">
+  <div class="step-header">
+    <div class="step-num">2</div>
+    <div class="step-title">Move Backup to Mac Mini</div>
+  </div>
+  <div class="step-desc">
+    Transfer the <code>openclaw-backup-*.tar.gz</code> file from your Desktop to the Mac Mini's Desktop.
+    Use AirDrop, USB drive, or network share.
+  </div>
+  <div class="check-item check-wait"><span class="icon">📦</span> AirDrop / USB / Network Share</div>
+</div>
+
+<!-- STEP 3 -->
+<div class="step-card" id="step3">
+  <div class="step-header">
+    <div class="step-num">3</div>
+    <div class="step-title">Set Up Mac Mini (First Time Only)</div>
+  </div>
+  <div class="step-desc">
+    Installs Homebrew, Node.js, Python, OpenClaw, Ollama, and the qwen3:8b model automatically.
+  </div>
+  <div class="cmd-box" id="cmd3">./botbid-migrate.sh setup<button class="copy-btn" onclick="copyCmd('cmd3')">Copy</button></div>
+</div>
+
+<!-- STEP 4 -->
+<div class="step-card" id="step4">
+  <div class="step-header">
+    <div class="step-num">4</div>
+    <div class="step-title">Restore Your Agent (Mac Mini)</div>
+  </div>
+  <div class="step-desc">
+    Extracts backup, patches file paths to match the new username, fixes permissions,
+    and starts the gateway.
+  </div>
+  <div class="cmd-box" id="cmd4">./botbid-migrate.sh restore<button class="copy-btn" onclick="copyCmd('cmd4')">Copy</button></div>
+</div>
+
+<!-- STEP 5 -->
+<div class="step-card" id="step5">
+  <div class="step-header">
+    <div class="step-num">5</div>
+    <div class="step-title">Validate Everything</div>
+  </div>
+  <div class="step-desc">
+    Runs a full checklist to make sure your agent is ready.
+  </div>
+  <div class="cmd-box" id="cmd5">./botbid-migrate.sh validate<button class="copy-btn" onclick="copyCmd('cmd5')">Copy</button></div>
+
+  <div class="check-item check-wait"><span class="icon">⏳</span> Config file (openclaw.json)</div>
+  <div class="check-item check-wait"><span class="icon">⏳</span> Agent profiles</div>
+  <div class="check-item check-wait"><span class="icon">⏳</span> Credentials</div>
+  <div class="check-item check-wait"><span class="icon">⏳</span> Memory files (SOUL.md, AGENTS.md)</div>
+  <div class="check-item check-wait"><span class="icon">⏳</span> Skills</div>
+  <div class="check-item check-wait"><span class="icon">⏳</span> Telegram configured</div>
+  <div class="check-item check-wait"><span class="icon">⏳</span> Ollama running</div>
+  <div class="check-item check-wait"><span class="icon">⏳</span> Gateway running</div>
+</div>
+
+<!-- CUTOVER -->
+<div class="warning-box">
+  <strong>Safe Cutover Checklist</strong><br><br>
+  1. Send a test message to Dover on Telegram — confirm it responds<br>
+  2. Only THEN stop the gateway on the OLD machine:<br>
+  &nbsp;&nbsp;&nbsp;<code>openclaw gateway stop</code><br>
+  3. Re-enable cron jobs on the Mac Mini:<br>
+  &nbsp;&nbsp;&nbsp;<code>mv ~/.openclaw/cron/jobs.json.disabled ~/.openclaw/cron/jobs.json</code><br><br>
+  Never run both gateways at the same time with the same Telegram token!
+</div>
+
+<!-- BONUS: Security -->
+<div class="step-card" id="step6" style="margin-top: 20px;">
+  <div class="step-header">
+    <div class="step-num" style="background: #f59e0b;">🔒</div>
+    <div class="step-title">Harden Security (Optional)</div>
+  </div>
+  <div class="step-desc">
+    Enables macOS firewall, checks FileVault, tightens credential permissions.
+  </div>
+  <div class="cmd-box" id="cmd6">./botbid-migrate.sh secure<button class="copy-btn" onclick="copyCmd('cmd6')">Copy</button></div>
+</div>
+
+<footer>
+  BotBid Agent Migration Tool &middot; <a href="https://botbid.org">botbid.org</a>
+</footer>
+
+</div>
+
+<script>
+function copyCmd(id) {
+  const el = document.getElementById(id);
+  const text = el.textContent.replace('Copy', '').trim();
+  navigator.clipboard.writeText(text);
+  const btn = el.querySelector('.copy-btn');
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = 'Copy', 1500);
+}
+</script>
+</body>
+</html>
