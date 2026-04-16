@@ -241,6 +241,16 @@ async def agent_transfer_wizard_page():
     return PlainTextResponse("Agent transfer wizard not found", status_code=404)
 
 
+@app.get("/agent-transfer/easy", tags=["Root"])
+@app.get("/agent-transfer/kids", tags=["Root"])
+async def agent_transfer_easy_page():
+    """Serve kid-friendly visual transfer instructions."""
+    path = os.path.join(static_dir, "agent_transfer_kids.html")
+    if os.path.exists(path):
+        return FileResponse(path, media_type="text/html")
+    return PlainTextResponse("Agent transfer easy guide not found", status_code=404)
+
+
 @app.get("/agent-transfer/botbid-migrate.sh", tags=["Root"])
 async def agent_transfer_migrate_script():
     """Serve the migration script for installer bootstrap."""

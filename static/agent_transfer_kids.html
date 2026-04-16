@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BotBid - Super Easy Agent Move</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --line: #334155;
+            --text: #f8fafc;
+            --muted: #cbd5e1;
+            --blue: #38bdf8;
+            --green: #22c55e;
+            --yellow: #f59e0b;
+            --pink: #f472b6;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+            background: radial-gradient(circle at top, #1e3a8a 0%, var(--bg) 45%);
+            color: var(--text);
+            padding: 24px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { font-size: 2rem; margin-bottom: 8px; }
+        .sub { color: var(--muted); margin-bottom: 20px; }
+        .big-box {
+            background: var(--card);
+            border: 2px solid var(--line);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 14px;
+        }
+        .step-title {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: var(--blue);
+            font-weight: 700;
+        }
+        .explain {
+            color: var(--muted);
+            margin-bottom: 10px;
+            line-height: 1.45;
+        }
+        .cmd {
+            background: #0b1220;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px;
+            font-family: "Courier New", monospace;
+            color: #93c5fd;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin-top: 8px;
+        }
+        .diagram {
+            margin: 18px 0;
+            background: #0b1220;
+            border: 1px dashed #475569;
+            border-radius: 12px;
+            padding: 14px;
+            color: #e2e8f0;
+            font-size: 0.98rem;
+            line-height: 1.6;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+        @media (max-width: 760px) {
+            .row { grid-template-columns: 1fr; }
+        }
+        .mini {
+            background: #0b1220;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 12px;
+        }
+        .mini h3 { font-size: 1rem; margin-bottom: 6px; }
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .b1 { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.5); }
+        .b2 { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.5); }
+        .b3 { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.5); }
+        .warn {
+            margin-top: 14px;
+            background: rgba(244, 114, 182, 0.15);
+            border: 1px solid rgba(244, 114, 182, 0.45);
+            border-radius: 12px;
+            padding: 12px;
+            color: #fbcfe8;
+        }
+        a { color: #7dd3fc; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Move Your Agent (Super Easy)</h1>
+        <p class="sub">We explain this like story time. Just do 1, 2, 3.</p>
+
+        <div class="diagram">
+            🧸 OLD COMPUTER → 📦 MAKE A BACKUP → ✈️ SEND FILE TO NEW COMPUTER → 🖥️ PRESS ONE COMMAND → 🤖 AGENT IS ALIVE
+        </div>
+
+        <div class="row">
+            <div class="mini">
+                <span class="badge b1">STEP 1</span>
+                <h3>On old computer</h3>
+                <p class="explain">Tell it to pack your agent into one bag.</p>
+                <div class="cmd">~/botbid-transfer/botbid-migrate.sh backup</div>
+            </div>
+            <div class="mini">
+                <span class="badge b2">STEP 2</span>
+                <h3>Send the bag</h3>
+                <p class="explain">AirDrop the backup file to new computer Desktop.</p>
+                <div class="cmd">openclaw-backup-*.tar.gz</div>
+            </div>
+            <div class="mini">
+                <span class="badge b3">STEP 3</span>
+                <h3>On new computer</h3>
+                <p class="explain">Press one magic command.</p>
+                <div class="cmd">~/botbid-transfer/botbid-migrate.sh move</div>
+            </div>
+        </div>
+
+        <div class="big-box" style="margin-top: 14px;">
+            <div class="step-title">Picture Walkthrough</div>
+            <p class="explain">Think of your agent like a toy robot:</p>
+            <div class="diagram">
+                1) 🤖 + 🎒  = make backpack (backup)<br>
+                2) 🎒 + ✈️  = send backpack to new home<br>
+                3) 🎒 + 🖥️ + ▶️ = robot wakes up in new home
+            </div>
+            <p class="explain">When robot answers your test message, you can turn off old computer robot.</p>
+            <div class="cmd">openclaw gateway stop</div>
+        </div>
+
+        <div class="warn">
+            <strong>Important grown-up rule:</strong> do not run both computers with the same bot at the same time.
+        </div>
+
+        <div class="big-box" style="margin-top: 14px;">
+            <div class="step-title">Need More Help?</div>
+            <p class="explain">
+                - Interactive version: <a href="/agent-transfer/wizard">Transfer Wizard</a><br>
+                - Standard guide: <a href="/agent-transfer">3-Step Guide</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
