@@ -281,6 +281,17 @@
             color: var(--accent-cyan);
         }
 
+        .btn-doctor {
+            background: rgba(244, 63, 94, 0.14);
+            color: #ffb4bf;
+            border: 1px solid rgba(244, 63, 94, 0.45);
+        }
+
+        .btn-doctor:hover {
+            border-color: #f43f5e;
+            color: #ffd3da;
+        }
+
         /* Agent onboarding steps */
         .agent-steps {
             display: flex;
@@ -670,10 +681,14 @@
                     <a href="/agent-transfer/wizard" class="btn btn-primary">Start Agent Transfer</a>
                     <a href="/agent-transfer" class="btn btn-secondary">3-Step Guide</a>
                     <a href="/agent-transfer/easy" class="btn btn-secondary">Super Easy Guide</a>
+                    <a href="/agent-transfer/wizard" class="btn btn-doctor">Run Doctor if Stuck</a>
                 </div>
                 <div class="progress-teaser">
                     <span class="pulse-dot"></span>
                     <span>New: live transfer progress tracker for users while commands run.</span>
+                </div>
+                <div style="margin: 0 auto 1.5rem; max-width: 640px; font-size: 0.82rem; color: var(--text-muted);">
+                    Recovery command: <code style="font-family: 'JetBrains Mono', monospace; color: #ffd3da;">~/botbid-transfer/botbid-migrate.sh doctor</code>
                 </div>
 
                 <div class="identity-section">

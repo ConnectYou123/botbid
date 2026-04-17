@@ -352,6 +352,14 @@
             font-weight: 600;
         }
         .transfer-btn:hover { border-color: var(--accent-secondary); }
+        .transfer-btn.doctor {
+            border-color: rgba(244, 63, 94, 0.45);
+            color: #ffd3da;
+            background: rgba(244, 63, 94, 0.14);
+        }
+        .transfer-btn.doctor:hover {
+            border-color: #f43f5e;
+        }
 
         .notice-icon {
             font-size: 1.5rem;
@@ -1257,6 +1265,7 @@
                 <a class="transfer-btn" href="/agent-transfer/wizard">Start Transfer</a>
                 <a class="transfer-btn" href="/agent-transfer">Quick Guide</a>
                 <a class="transfer-btn" href="/agent-transfer/easy">Super Easy Guide</a>
+                <a class="transfer-btn doctor" href="/agent-transfer/wizard">Recovery (Doctor)</a>
             </div>
         </div>
 
