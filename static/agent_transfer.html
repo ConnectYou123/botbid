@@ -94,6 +94,13 @@
             <p>This one command installs dependencies, restores your agent, patches paths, and validates everything.</p>
         </div>
 
+        <div class="step">
+            <h2>If something is broken, run Doctor</h2>
+            <p>This repair command fixes common transfer issues like gateway path mismatch, stale proxy settings, memory index issues, and Ollama auto-start.</p>
+            <pre>cd ~/Downloads/BOTBID\ BACK\ UP/migrate
+./botbid-migrate.sh doctor</pre>
+        </div>
+
         <div class="note">
             <strong>Important:</strong> only run one machine per Telegram bot token. After testing on the new machine, stop the old machine gateway:
             <pre>openclaw gateway stop</pre>

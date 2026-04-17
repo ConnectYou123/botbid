@@ -8,6 +8,7 @@
 #    ./botbid-migrate.sh restore    (on NEW machine — restores agent)
 #    ./botbid-migrate.sh validate   (on NEW machine — checks everything)
 #    ./botbid-migrate.sh move       (on NEW machine — one-command setup+restore+validate)
+#    ./botbid-migrate.sh doctor     (on NEW machine — repair common migration issues)
 #    ./botbid-migrate.sh secure     (on NEW machine — hardens security)
 # ═══════════════════════════════════════════════════════════
 
@@ -16,6 +17,8 @@ set -euo pipefail
 OPENCLAW_DIR="$HOME/.openclaw"
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 BACKUP_FILE="$HOME/Desktop/openclaw-backup-${TIMESTAMP}.tar.gz"
+GATEWAY_PLIST="$HOME/Library/LaunchAgents/ai.openclaw.gateway.plist"
+OLLAMA_PLIST="$HOME/Library/LaunchAgents/com.ollama.serve.plist"
 
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -28,6 +31,150 @@ fail() { echo -e "  ${RED}❌ $1${NC}"; }
 info() { echo -e "  ${BLUE}ℹ️  $1${NC}"; }
 warn() { echo -e "  ${YELLOW}⚠️  $1${NC}"; }
 header() { echo -e "\n${BLUE}═══════════════════════════════════════${NC}"; echo -e "${BLUE}  $1${NC}"; echo -e "${BLUE}═══════════════════════════════════════${NC}\n"; }
+
+load_launchagent() {
+    local plist="$1"
+    if [ ! -f "$plist" ]; then
+        warn "LaunchAgent plist not found: $plist"
+        return 1
+    fi
+
+    launchctl unload "$plist" 2>/dev/null || true
+    if launchctl load "$plist" 2>/dev/null; then
+        ok "Loaded LaunchAgent: $(basename "$plist")"
+        return 0
+    fi
+
+    local uid
+    uid=$(id -u)
+    launchctl bootout "gui/$uid" "$plist" 2>/dev/null || true
+    if launchctl bootstrap "gui/$uid" "$plist" 2>/dev/null; then
+        ok "Bootstrapped LaunchAgent: $(basename "$plist")"
+        return 0
+    fi
+
+    warn "Could not auto-load LaunchAgent: $(basename "$plist")"
+    return 1
+}
+
+sanitize_gateway_proxy_env() {
+    if [ ! -f "$GATEWAY_PLIST" ]; then
+        warn "Gateway LaunchAgent plist not found yet"
+        return 0
+    fi
+
+    info "Removing stale proxy env vars from gateway plist..."
+    python3 - "$GATEWAY_PLIST" <<'PY'
+import plistlib
+import sys
+
+path = sys.argv[1]
+with open(path, "rb") as f:
+    data = plistlib.load(f)
+
+proxy_keys = [
+    "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY",
+    "http_proxy", "https_proxy", "all_proxy", "no_proxy",
+]
+env = data.get("EnvironmentVariables", {})
+for key in proxy_keys:
+    env.pop(key, None)
+
+if env:
+    data["EnvironmentVariables"] = env
+else:
+    data.pop("EnvironmentVariables", None)
+
+with open(path, "wb") as f:
+    plistlib.dump(data, f)
+PY
+    ok "Gateway proxy cleanup completed"
+}
+
+ensure_ollama_launchagent() {
+    if ! command -v ollama &>/dev/null; then
+        warn "Ollama not found; skipping autostart setup"
+        return 0
+    fi
+
+    info "Configuring Ollama auto-start..."
+    mkdir -p "$HOME/Library/LaunchAgents"
+
+    cat > "$OLLAMA_PLIST" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.ollama.serve</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$(command -v ollama)</string>
+    <string>serve</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>$HOME/Library/Logs/ollama-serve.log</string>
+  <key>StandardErrorPath</key>
+  <string>$HOME/Library/Logs/ollama-serve.log</string>
+</dict>
+</plist>
+EOF
+
+    load_launchagent "$OLLAMA_PLIST" || true
+    if curl -s http://127.0.0.1:11434/api/tags &>/dev/null; then
+        ok "Ollama service is running"
+    else
+        warn "Ollama not reachable yet; try: ollama serve"
+    fi
+}
+
+clear_openclaw_sessions() {
+    local session_file="$OPENCLAW_DIR/agents/main/sessions/sessions.json"
+    mkdir -p "$(dirname "$session_file")"
+    echo "{}" > "$session_file"
+    ok "Cleared stale session transcript state"
+}
+
+repair_gateway_launchagent() {
+    if ! command -v openclaw &>/dev/null; then
+        warn "OpenClaw CLI missing; cannot repair gateway LaunchAgent"
+        return 0
+    fi
+
+    info "Reinstalling gateway LaunchAgent with current OpenClaw version..."
+    if openclaw gateway install --force >/dev/null 2>&1; then
+        ok "Gateway LaunchAgent regenerated"
+    else
+        warn "Gateway install --force failed"
+    fi
+
+    sanitize_gateway_proxy_env
+    load_launchagent "$GATEWAY_PLIST" || true
+}
+
+post_restore_repair() {
+    if ! command -v openclaw &>/dev/null; then
+        warn "OpenClaw not found; skipping post-restore repair tasks"
+        return 0
+    fi
+
+    info "Running OpenClaw doctor fix..."
+    openclaw doctor --fix >/dev/null 2>&1 && ok "openclaw doctor --fix complete" || warn "openclaw doctor --fix reported issues"
+
+    info "Re-indexing memory..."
+    openclaw memory index >/dev/null 2>&1 && ok "Memory index completed" || warn "Memory index failed; run 'openclaw memory index' manually"
+
+    info "Checking OpenClaw update..."
+    openclaw update >/dev/null 2>&1 && ok "OpenClaw update check complete" || warn "OpenClaw update command failed"
+
+    info "Preparing authenticated dashboard link..."
+    openclaw dashboard --no-open >/dev/null 2>&1 || true
+    warn "If dashboard asks for token, run: openclaw dashboard"
+}
 
 # ─────────────────────────────────────
 # STEP 1: BACKUP (run on OLD machine)
@@ -61,7 +208,6 @@ do_backup() {
 
     # Create the backup (exclude large caches, logs, node_modules)
     tar -czf "$BACKUP_FILE" \
-        --exclude='*.log' \
         --exclude='node_modules' \
         --exclude='__pycache__' \
         --exclude='.git' \
@@ -80,6 +226,8 @@ do_backup() {
     echo ""
     echo -e "  ${GREEN}📦 Find your backup file on your Desktop!${NC}"
     echo -e "  ${GREEN}   Copy it to your new Mac Mini via AirDrop, USB, or network share.${NC}"
+    warn "Browser website logins and macOS Keychain secrets are not in .openclaw."
+    warn "If you need Moltbook/browser sessions, migrate your browser profile or re-login."
     echo ""
 }
 
@@ -132,6 +280,12 @@ do_setup() {
         npm install -g openclaw@latest 2>/dev/null && ok "OpenClaw CLI installed" || warn "OpenClaw install failed — you may need: sudo npm install -g openclaw@latest"
     fi
 
+    # Ensure OpenClaw CLI and gateway stay in sync
+    if command -v openclaw &>/dev/null; then
+        info "Checking for OpenClaw updates..."
+        openclaw update >/dev/null 2>&1 && ok "OpenClaw update check complete" || warn "Could not run openclaw update"
+    fi
+
     # Check/install Ollama
     if command -v ollama &>/dev/null; then
         ok "Ollama is installed"
@@ -144,6 +298,7 @@ do_setup() {
     if command -v ollama &>/dev/null; then
         info "Pulling qwen3:8b model (this may take a few minutes)..."
         ollama pull qwen3:8b 2>/dev/null && ok "Model qwen3:8b ready" || warn "Model pull failed — try manually: ollama pull qwen3:8b"
+        ensure_ollama_launchagent
     fi
 
     # Check/install Git
@@ -210,11 +365,11 @@ do_restore() {
     if [ "$OLD_USER" != "$NEW_USER" ]; then
         info "Patching paths: /Users/$OLD_USER → /Users/$NEW_USER ..."
 
-        find "$OPENCLAW_DIR" \( -name "*.json" -o -name "*.md" -o -name "*.jsonl" -o -name "*.py" -o -name "*.yaml" -o -name "*.yml" -o -name "*.txt" -o -name "*.env" \) -type f 2>/dev/null | while read -r file; do
+        while IFS= read -r -d '' file; do
             if grep -q "/Users/$OLD_USER" "$file" 2>/dev/null; then
                 sed -i '' "s|/Users/$OLD_USER|/Users/$NEW_USER|g" "$file"
             fi
-        done
+        done < <(find "$OPENCLAW_DIR" \( -name "*.json" -o -name "*.md" -o -name "*.jsonl" -o -name "*.py" -o -name "*.yaml" -o -name "*.yml" -o -name "*.txt" -o -name "*.env" \) -type f -print0 2>/dev/null)
 
         ok "All paths patched"
     else
@@ -232,6 +387,15 @@ do_restore() {
         ok "Cron jobs disabled for safe first boot"
     fi
 
+    # Reset stale conversation sessions while preserving workspace personality files
+    clear_openclaw_sessions
+
+    # Rebuild LaunchAgent to avoid stale paths/proxy settings from old machine
+    repair_gateway_launchagent
+
+    # Ensure Ollama starts automatically on login
+    ensure_ollama_launchagent
+
     # Try starting gateway
     echo ""
     info "Starting OpenClaw gateway..."
@@ -240,6 +404,9 @@ do_restore() {
     else
         warn "OpenClaw CLI not found — run './botbid-migrate.sh setup' first"
     fi
+
+    # Final health-repair tasks after restore
+    post_restore_repair
 
     echo ""
     ok "Restore complete!"
@@ -341,6 +508,14 @@ do_validate() {
         fail "Gateway is NOT running — start with: openclaw gateway restart"
     fi
 
+    # Gateway plist proxy safety check
+    total=$((total + 1))
+    if [ -f "$GATEWAY_PLIST" ] && ! /usr/libexec/PlistBuddy -c "Print :EnvironmentVariables:HTTP_PROXY" "$GATEWAY_PLIST" >/dev/null 2>&1; then
+        ok "Gateway proxy env vars are clean"; pass=$((pass + 1))
+    else
+        fail "Gateway proxy env vars look stale — run restore again or remove proxy keys from $GATEWAY_PLIST"
+    fi
+
     # Python requests module
     total=$((total + 1))
     if python3 -c "import requests" 2>/dev/null; then
@@ -348,6 +523,26 @@ do_validate() {
     else
         fail "Python 'requests' module — install with: python3 -m pip install requests"
     fi
+
+    # Memory index state
+    total=$((total + 1))
+    if command -v openclaw &>/dev/null && openclaw status 2>/dev/null | grep -qi "memory:.*dirty"; then
+        fail "Memory index is dirty — run: openclaw memory index"
+    else
+        ok "Memory index looks healthy"; pass=$((pass + 1))
+    fi
+
+    # Gmail / OAuth credential hint
+    if [ -d "$OPENCLAW_DIR/credentials" ]; then
+        if ls "$OPENCLAW_DIR/credentials" 2>/dev/null | tr '[:upper:]' '[:lower:]' | grep -Eq "(gmail|google|oauth)"; then
+            ok "Detected potential Gmail/OAuth credentials"
+        else
+            warn "No Gmail/OAuth credentials detected; email plugins may need re-auth"
+            warn "Run: openclaw configure --section plugins"
+        fi
+    fi
+    warn "Browser sign-ins (e.g. Moltbook website sessions) are managed outside OpenClaw."
+    warn "Those usually require browser profile migration or manual sign-in."
 
     echo ""
     if [ "$pass" -eq "$total" ]; then
@@ -364,6 +559,8 @@ do_validate() {
     echo ""
     echo "  1. Test your agent — send a message on Telegram"
     echo "  2. Confirm Dover responds correctly"
+    echo "     If needed, inspect gateway logs for sendMessage success"
+    echo "     (example: openclaw gateway logs)"
     echo "  3. THEN stop the gateway on your OLD laptop:"
     echo "     openclaw gateway stop"
     echo "  4. Re-enable cron jobs on this machine:"
@@ -372,6 +569,37 @@ do_validate() {
     echo -e "  ${RED}WARNING: Never run both gateways at the same time"
     echo -e "  with the same Telegram token — it will cause conflicts!${NC}"
     echo ""
+}
+
+# ─────────────────────────────────────
+# STEP 5: DOCTOR (repair common post-migration issues)
+# ─────────────────────────────────────
+do_doctor() {
+    header "DOCTOR — Repairing Common Transfer Issues"
+
+    if ! command -v openclaw &>/dev/null; then
+        fail "OpenClaw CLI not found. Run './botbid-migrate.sh setup' first."
+        exit 1
+    fi
+
+    repair_gateway_launchagent
+    ensure_ollama_launchagent
+
+    read -rp "  Reset session transcript cache for fresh context reload? (Y/n): " reset_sessions
+    if [[ "$reset_sessions" != "n" && "$reset_sessions" != "N" ]]; then
+        clear_openclaw_sessions
+    else
+        info "Session reset skipped."
+    fi
+
+    post_restore_repair
+
+    info "Restarting gateway..."
+    openclaw gateway restart >/dev/null 2>&1 && ok "Gateway restarted" || warn "Gateway restart failed; run 'openclaw gateway restart' manually"
+
+    echo ""
+    info "Running final validation..."
+    do_validate
 }
 
 # ─────────────────────────────────────
@@ -462,6 +690,7 @@ case "${1:-help}" in
     validate) do_validate ;;
     move)     do_move ;;
     oneclick) do_move ;;
+    doctor)   do_doctor ;;
     secure)   do_secure ;;
     *)
         echo ""
@@ -473,6 +702,7 @@ case "${1:-help}" in
         echo "    ./botbid-migrate.sh restore     Import your agent (run on NEW machine)"
         echo "    ./botbid-migrate.sh validate   Check everything is working"
         echo "    ./botbid-migrate.sh move       One-command setup+restore+validate"
+        echo "    ./botbid-migrate.sh doctor     Repair common migration issues"
         echo "    ./botbid-migrate.sh secure     Harden security on new machine"
         echo ""
         ;;

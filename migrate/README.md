@@ -54,6 +54,20 @@ This single command automatically runs:
 - `restore` (imports backup, patches username paths, starts gateway)
 - `validate` (runs full checklist)
 
+### If Anything Fails: Run Doctor (New Machine)
+
+```bash
+cd ~/Downloads/BOTBID\ BACK\ UP/migrate
+./botbid-migrate.sh doctor
+```
+
+`doctor` repairs common migration issues automatically:
+- Regenerates/fixes OpenClaw gateway LaunchAgent
+- Removes stale proxy variables from gateway plist
+- Reconfigures Ollama auto-start and checks local Ollama API
+- Runs `openclaw doctor --fix`, `openclaw memory index`, and `openclaw update`
+- Restarts gateway and runs a full `validate`
+
 ---
 
 ## After Validation
@@ -109,7 +123,7 @@ Open `botbid-migrate.html` in your browser for a visual step-by-step guide with 
 
 | File | Purpose |
 |------|---------|
-| `botbid-migrate.sh` | Main migration script (backup/setup/restore/validate/move/secure) |
+| `botbid-migrate.sh` | Main migration script (backup/setup/restore/validate/move/doctor/secure) |
 | `botbid-agent-transfer.js` | Node.js module for BotBid marketplace agent transfers |
 | `botbid-migrate.html` | Visual guide with copy-paste commands |
 | `README.md` | This file |
