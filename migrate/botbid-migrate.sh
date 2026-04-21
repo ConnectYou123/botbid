@@ -4,6 +4,7 @@
 #  Transfer your OpenClaw AI agent between machines
 #  Usage:
 #    ./botbid-migrate.sh backup     (on OLD machine)
+#    ./botbid-migrate.sh backup-full (on OLD machine — backup + checksum + transfer report)
 #    ./botbid-migrate.sh setup      (on NEW machine — installs deps)
 #    ./botbid-migrate.sh restore    (on NEW machine — restores agent)
 #    ./botbid-migrate.sh validate   (on NEW machine — checks everything)
@@ -17,6 +18,8 @@ set -euo pipefail
 OPENCLAW_DIR="$HOME/.openclaw"
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 BACKUP_FILE="$HOME/Desktop/openclaw-backup-${TIMESTAMP}.tar.gz"
+BACKUP_SHA_FILE="$HOME/Desktop/openclaw-backup-${TIMESTAMP}.sha256"
+BACKUP_REPORT_FILE="$HOME/Desktop/openclaw-backup-${TIMESTAMP}-TRANSFER-REPORT.txt"
 GATEWAY_PLIST="$HOME/Library/LaunchAgents/ai.openclaw.gateway.plist"
 OLLAMA_PLIST="$HOME/Library/LaunchAgents/com.ollama.serve.plist"
 
@@ -31,6 +34,58 @@ fail() { echo -e "  ${RED}❌ $1${NC}"; }
 info() { echo -e "  ${BLUE}ℹ️  $1${NC}"; }
 warn() { echo -e "  ${YELLOW}⚠️  $1${NC}"; }
 header() { echo -e "\n${BLUE}═══════════════════════════════════════${NC}"; echo -e "${BLUE}  $1${NC}"; echo -e "${BLUE}═══════════════════════════════════════${NC}\n"; }
+
+write_backup_report() {
+    local backup="$1"
+    local sha_file="$2"
+    local report_file="$3"
+    local checksum
+    local size
+    local skills_count=0
+
+    checksum=$(awk '{print $1}' "$sha_file")
+    size=$(du -h "$backup" | cut -f1)
+    if [ -d "$OPENCLAW_DIR/skills" ]; then
+        skills_count=$(find "$OPENCLAW_DIR/skills" -name "*.py" 2>/dev/null | wc -l | tr -d ' ')
+    fi
+
+    cat > "$report_file" <<EOF
+BotBid Agent Transfer Report
+Generated: $(date)
+
+Backup file:
+$(basename "$backup")
+Size: $size
+SHA256: $checksum
+
+What is included from ~/.openclaw:
+- openclaw.json
+- workspace/ (memory/personality files like SOUL.md, AGENTS.md)
+- agents/ (sessions/state)
+- credentials/ (local OpenClaw credentials files)
+- skills/ (custom skill scripts; detected count: $skills_count)
+- cron/ (scheduled jobs config)
+
+What is NOT reliably portable in this archive:
+- Browser website login sessions/cookies (example: Moltbook sign-in in browser)
+- macOS Keychain-only secrets
+- Some OAuth grants may still require re-auth on new machine
+
+Google Drive transfer steps:
+1) Upload these files from Desktop to Drive:
+   - $(basename "$backup")
+   - $(basename "$sha_file")
+   - $(basename "$report_file")
+2) On the new machine, download to Desktop.
+3) Verify integrity:
+   cd ~/Desktop
+   shasum -a 256 -c $(basename "$sha_file")
+4) Run migration:
+   ~/botbid-transfer/botbid-migrate.sh move
+5) If anything fails:
+   ~/botbid-transfer/botbid-migrate.sh doctor
+EOF
+}
 
 load_launchagent() {
     local plist="$1"
@@ -228,6 +283,29 @@ do_backup() {
     echo -e "  ${GREEN}   Copy it to your new Mac Mini via AirDrop, USB, or network share.${NC}"
     warn "Browser website logins and macOS Keychain secrets are not in .openclaw."
     warn "If you need Moltbook/browser sessions, migrate your browser profile or re-login."
+    echo ""
+}
+
+# ─────────────────────────────────────
+# STEP 1B: BACKUP-FULL (backup + checksum + transfer report)
+# ─────────────────────────────────────
+do_backup_full() {
+    header "BACKUP-FULL — Drive-Ready Package + Report"
+    do_backup
+
+    info "Generating backup checksum..."
+    shasum -a 256 "$BACKUP_FILE" > "$BACKUP_SHA_FILE"
+    ok "Checksum file created: $BACKUP_SHA_FILE"
+
+    info "Generating transfer report..."
+    write_backup_report "$BACKUP_FILE" "$BACKUP_SHA_FILE" "$BACKUP_REPORT_FILE"
+    ok "Transfer report created: $BACKUP_REPORT_FILE"
+
+    echo ""
+    echo -e "  ${GREEN}☁️  Google Drive ready:${NC}"
+    echo "  - $(basename "$BACKUP_FILE")"
+    echo "  - $(basename "$BACKUP_SHA_FILE")"
+    echo "  - $(basename "$BACKUP_REPORT_FILE")"
     echo ""
 }
 
@@ -685,6 +763,7 @@ do_move() {
 # ─────────────────────────────────────
 case "${1:-help}" in
     backup)   do_backup ;;
+    backup-full) do_backup_full ;;
     setup)    do_setup ;;
     restore)  do_restore ;;
     validate) do_validate ;;
@@ -698,6 +777,7 @@ case "${1:-help}" in
         echo ""
         echo "  Usage:"
         echo "    ./botbid-migrate.sh backup     Package your agent (run on OLD machine)"
+        echo "    ./botbid-migrate.sh backup-full Package + checksum + Drive transfer report"
         echo "    ./botbid-migrate.sh setup      Install dependencies (run on NEW machine)"
         echo "    ./botbid-migrate.sh restore     Import your agent (run on NEW machine)"
         echo "    ./botbid-migrate.sh validate   Check everything is working"

@@ -77,13 +77,21 @@
             <p>Open Terminal on your old machine and run:</p>
             <pre>cd ~/Downloads/BOTBID\ BACK\ UP/migrate
 ./botbid-migrate.sh backup</pre>
+            <p>Using Google Drive? Use this safer export instead:</p>
+            <pre>cd ~/Downloads/BOTBID\ BACK\ UP/migrate
+./botbid-migrate.sh backup-full</pre>
+            <p>This also creates a checksum + transfer report for easy verification.</p>
         </div>
 
         <div class="step">
             <h2>Step 2: Move backup file</h2>
-            <p>AirDrop (or USB) these to the new computer Desktop:</p>
+            <p>AirDrop/USB/Google Drive these to the new computer Desktop:</p>
             <pre>1) openclaw-backup-*.tar.gz
-2) BOTBID BACK UP folder (includes migrate scripts)</pre>
+2) openclaw-backup-*.sha256 (if you used backup-full)
+3) BOTBID BACK UP folder (includes migrate scripts)</pre>
+            <p>If you used backup-full, verify integrity on new Mac:</p>
+            <pre>cd ~/Desktop
+shasum -a 256 -c openclaw-backup-*.sha256</pre>
         </div>
 
         <div class="step">

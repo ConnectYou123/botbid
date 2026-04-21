@@ -31,6 +31,26 @@ cd ~/Downloads/BOTBID\ BACK\ UP/migrate
 
 This creates `openclaw-backup-*.tar.gz` on your **Desktop**.
 
+### Better for Google Drive: Backup + Checksum + Report
+
+```bash
+cd ~/Downloads/BOTBID\ BACK\ UP/migrate
+./botbid-migrate.sh backup-full
+```
+
+This creates 3 files on your Desktop:
+- `openclaw-backup-*.tar.gz`
+- `openclaw-backup-*.sha256`
+- `openclaw-backup-*-TRANSFER-REPORT.txt`
+
+Upload all 3 to Google Drive, then download all 3 on your new Mac.
+Verify before restore:
+
+```bash
+cd ~/Desktop
+shasum -a 256 -c openclaw-backup-*.sha256
+```
+
 ### Step 2: Transfer the File
 
 Move the backup file to the Mac Mini's Desktop using:
@@ -123,7 +143,7 @@ Open `botbid-migrate.html` in your browser for a visual step-by-step guide with 
 
 | File | Purpose |
 |------|---------|
-| `botbid-migrate.sh` | Main migration script (backup/setup/restore/validate/move/doctor/secure) |
+| `botbid-migrate.sh` | Main migration script (backup/backup-full/setup/restore/validate/move/doctor/secure) |
 | `botbid-agent-transfer.js` | Node.js module for BotBid marketplace agent transfers |
 | `botbid-migrate.html` | Visual guide with copy-paste commands |
 | `README.md` | This file |

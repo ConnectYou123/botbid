@@ -234,8 +234,14 @@
                 <pre id="cmd-old">~/botbid-transfer/botbid-migrate.sh backup</pre>
                 <button class="copy" onclick="copyText('cmd-old', this)">Copy</button>
             </div>
+            <p style="margin-top: 10px;">Google Drive recommended export (adds checksum + transfer report):</p>
+            <div class="cmd">
+                <pre id="cmd-old-full">~/botbid-transfer/botbid-migrate.sh backup-full</pre>
+                <button class="copy" onclick="copyText('cmd-old-full', this)">Copy</button>
+            </div>
             <ul>
-                <li>Move the backup file `openclaw-backup-*.tar.gz` to the new machine Desktop.</li>
+                <li>Move `openclaw-backup-*.tar.gz` to the new machine Desktop.</li>
+                <li>If using backup-full, move `openclaw-backup-*.sha256` too, then verify checksum.</li>
             </ul>
         </div>
 
@@ -246,6 +252,11 @@
             <div class="cmd">
                 <pre id="cmd-new">~/botbid-transfer/botbid-migrate.sh move</pre>
                 <button class="copy" onclick="copyText('cmd-new', this)">Copy</button>
+            </div>
+            <p style="margin-top: 10px;">If you have a checksum file, verify before restore:</p>
+            <div class="cmd">
+                <pre id="cmd-verify">cd ~/Desktop && shasum -a 256 -c openclaw-backup-*.sha256</pre>
+                <button class="copy" onclick="copyText('cmd-verify', this)">Copy</button>
             </div>
             <p style="margin-top: 10px;">After test message succeeds, stop the old machine gateway:</p>
             <div class="cmd">

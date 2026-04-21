@@ -165,6 +165,8 @@
   </div>
   <div class="cmd-box" id="cmd1">./botbid-migrate.sh backup<button class="copy-btn" onclick="copyCmd('cmd1')">Copy</button></div>
   <div class="check-item check-wait"><span class="icon">⏳</span> This creates openclaw-backup-*.tar.gz</div>
+  <div class="check-item check-wait"><span class="icon">☁️</span> Google Drive mode: <code>./botbid-migrate.sh backup-full</code></div>
+  <div class="check-item check-wait"><span class="icon">🔐</span> backup-full also creates checksum + transfer report files</div>
 </div>
 
 <!-- STEP 2 -->
@@ -175,7 +177,7 @@
   </div>
   <div class="step-desc">
     Transfer the <code>openclaw-backup-*.tar.gz</code> file from your Desktop to the Mac Mini's Desktop.
-    Use AirDrop, USB drive, or network share.
+    Use AirDrop, USB drive, network share, or Google Drive.
   </div>
   <div class="check-item check-wait"><span class="icon">📦</span> AirDrop / USB / Network Share</div>
 </div>
